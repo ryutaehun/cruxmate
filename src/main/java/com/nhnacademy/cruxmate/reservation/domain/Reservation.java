@@ -50,8 +50,7 @@ public class Reservation {
             ClimbingSession session,
             int participantCount
     ) {
-        validateMember(member);
-        validateSession(session);
+        validateBasicInfo(member, session);
         validateParticipantCount(participantCount);
 
         this.member = member;
@@ -75,14 +74,10 @@ public class Reservation {
             );
         }
     }
-
-    private static void validateMember(Member member) {
+    private static void validateBasicInfo(Member member, ClimbingSession session){
         if (member == null) {
             throw new IllegalArgumentException("예약 회원은 필수입니다.");
         }
-    }
-
-    private static void validateSession(ClimbingSession session) {
         if (session == null) {
             throw new IllegalArgumentException("예약 세션은 필수입니다.");
         }
