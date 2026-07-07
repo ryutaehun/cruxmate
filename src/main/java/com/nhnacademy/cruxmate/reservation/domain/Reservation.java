@@ -40,6 +40,11 @@ public class Reservation {
     @JoinColumn(name = "session_id", nullable = false)
     private ClimbingSession session;
 
+    @PrePersist
+    private void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
+
     private Reservation(
             Member member,
             ClimbingSession session,
@@ -81,10 +86,5 @@ public class Reservation {
         if (session == null) {
             throw new IllegalArgumentException("예약 세션은 필수입니다.");
         }
-    }
-
-    @PrePersist
-    private void onCreate() {
-        this.createdAt = LocalDateTime.now();
     }
 }

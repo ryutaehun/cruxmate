@@ -46,21 +46,28 @@ public class Member {
         this.updatedAt = LocalDateTime.now();
     }
 
-    public static Member createUser(String email, String passwordHash) {
+    public static Member createMember(String email, String passwordHash) {
         return new Member(email, passwordHash, MemberRole.USER);
     }
 
     private Member(String email, String passwordHash, MemberRole role) {
-        if (email == null || email.isBlank()) {
-            throw new IllegalArgumentException("이메일은 비어 있을 수 없습니다.");
-        }
-
-        if (passwordHash == null || passwordHash.isBlank()) {
-            throw new IllegalArgumentException("비밀번호 해시는 비어 있을 수 없습니다.");
-        }
+        validateEmail(email);
+        validatePasswordHash(passwordHash);
 
         this.email = email;
         this.passwordHash = passwordHash;
         this.role = role;
+    }
+
+    private void validateEmail(String email){
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("이메일은 비어 있을 수 없습니다.");
+        }
+    }
+
+    private void validatePasswordHash(String passwordHash){
+        if (passwordHash == null || passwordHash.isBlank()) {
+            throw new IllegalArgumentException("비밀번호 해시는 비어 있을 수 없습니다.");
+        }
     }
 }
