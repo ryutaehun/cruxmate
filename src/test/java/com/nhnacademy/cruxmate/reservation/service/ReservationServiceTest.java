@@ -1,6 +1,8 @@
 package com.nhnacademy.cruxmate.reservation.service;
 
 import com.nhnacademy.cruxmate.TestcontainersConfiguration;
+import com.nhnacademy.cruxmate.common.exception.BusinessException;
+import com.nhnacademy.cruxmate.common.exception.ErrorCode;
 import com.nhnacademy.cruxmate.member.domain.Member;
 import com.nhnacademy.cruxmate.member.repository.MemberRepository;
 import com.nhnacademy.cruxmate.reservation.domain.Reservation;
@@ -68,8 +70,12 @@ public class ReservationServiceTest {
         entityManager.flush();
         entityManager.clear();
 
-        Reservation savedReservation = reservationRepository.findById(reservationId).orElseThrow();
-        ClimbingSession savedClimbingSession = climbingSessionRepository.findById(session.getId()).orElseThrow();
+        Reservation savedReservation = reservationRepository.findById(reservationId).orElseThrow(
+                () -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND)
+        );
+        ClimbingSession savedClimbingSession = climbingSessionRepository.findById(session.getId()).orElseThrow(
+                () -> new BusinessException(ErrorCode.CLIMBING_SESSION_NOT_FOUND)
+        );
 
         assertThat(reservationId).isNotNull();
 

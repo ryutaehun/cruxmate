@@ -4,7 +4,10 @@ import com.nhnacademy.cruxmate.common.exception.BusinessException;
 import com.nhnacademy.cruxmate.common.exception.ErrorCode;
 import com.nhnacademy.cruxmate.member.domain.Member;
 import com.nhnacademy.cruxmate.member.repository.MemberRepository;
+import com.nhnacademy.cruxmate.reservation.domain.ReservationStatus;
 import com.nhnacademy.cruxmate.reservation.repository.ReservationRepository;
+import com.nhnacademy.cruxmate.session.domain.ClimbingSession;
+import com.nhnacademy.cruxmate.session.domain.ClimbingSessionLevel;
 import com.nhnacademy.cruxmate.session.repository.ClimbingSessionRepository;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -13,6 +16,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.mockito.Mockito.*;
@@ -75,5 +79,55 @@ public class ReservationServiceUnitTest {
         verify(memberRepository).findById(memberId);
         verify(climbingSessionRepository).findById(sessionId);
         verify(reservationRepository, never()).save(any());
+    }
+
+    @Test
+    void 이미_확정된_예약이_있으면_DUPLICATE_RESERVATION(){
+        Long memberId = 1L;
+        Long sessionId = 1L;
+
+        Member member = Member.create(
+                "fbxogns321@naver.com",
+                "1234"
+        );
+
+        LocalDateTime startAt = LocalDateTime.of(2026, 7, 20, 19, 0);
+        LocalDateTime endAt = LocalDateTime.of(2026, 7, 20, 21, 0);
+        LocalDateTime reservationOpenAt =
+                LocalDateTime.of(2026, 7, 10, 9, 0);
+        LocalDateTime reservationCloseAt =
+                LocalDateTime.of(2026, 7, 20, 18, 0);
+
+        ClimbingSession session = ClimbingSession.create(
+                "평일 저녁 초보 세션",
+                "광주 온클라이밍",
+                startAt,
+                endAt,
+                reservationOpenAt,
+                reservationCloseAt,
+                4,
+                ClimbingSessionLevel.BEGINNER
+        );
+
+        when(memberRepository.findById(memberId)).thenReturn(Optional.of(member));
+        when(climbingSessionRepository.findById(sessionId)).thenReturn(Optional.of(session));
+        when(reservationRepository.existsByMember_IdAndSession_IdAndStatus(
+                memberId, sessionId, ReservationStatus.CONFIRMED
+        )).thenReturn(true);
+
+        Assertions.assertThatThrownBy(
+                () -> reservationService.createReservation(memberId, sessionId, 2))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.DUPLICATE_RESERVATION);
+
+        verify(reservationRepository, never()).save(any());
+        verify(reservationRepository)
+                .existsByMember_IdAndSession_IdAndStatus(
+                        memberId,
+                        sessionId,
+                        ReservationStatus.CONFIRMED
+                );
+        Assertions.assertThat(session.getReservedCount()).isZero();
     }
 }
