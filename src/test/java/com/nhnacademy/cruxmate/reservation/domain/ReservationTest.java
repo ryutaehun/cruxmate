@@ -35,7 +35,7 @@ public class ReservationTest {
                 endAt,
                 reservationOpenAt,
                 reservationCloseAt,
-                10,
+                4,
                 ClimbingSessionLevel.BEGINNER
         );
 
@@ -89,5 +89,56 @@ public class ReservationTest {
         ))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("예약 세션은 필수입니다.");
+    }
+
+    @Test
+    void reserve_정상(){
+        session.reserve(3, LocalDateTime.of(2026, 7, 10, 9, 0));
+        Assertions.assertEquals(3, session.getReservedCount());
+    }
+
+    @Test
+    void reserve_예약시작전이면_실패() {
+        assertThatThrownBy(() -> session.reserve(
+                2,
+                LocalDateTime.of(2026, 7, 10, 8, 59)
+        ))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("예약 가능 기간이 아닙니다");
+    }
+
+    @Test
+    void reserve_시작_마감_경계테스트(){
+        Assertions.assertDoesNotThrow(() -> session.reserve(2, LocalDateTime.of(2026, 7, 10, 9, 0)));
+        assertThatThrownBy(() -> session.reserve(
+                2, LocalDateTime.of(2026, 7, 20, 18, 0))
+        ).isInstanceOf(IllegalArgumentException.class).hasMessage("예약 가능 기간이 아닙니다");
+    }
+
+    @Test
+    void reserve_참여인원이_1명미만이거나_4명초과면_실패(){
+        assertThatThrownBy(() -> session.reserve(
+                5, LocalDateTime.of(2026, 7, 10, 10, 0))
+        ).isInstanceOf(IllegalArgumentException.class).hasMessage("참여 인원은 1명 이상 4명 이하여야 합니다.");
+        assertThatThrownBy(() -> session.reserve(
+                0, LocalDateTime.of(2026, 7, 10,  11, 0))
+        ).isInstanceOf(IllegalArgumentException.class).hasMessage("참여 인원은 1명 이상 4명 이하여야 합니다.");
+    }
+
+    @Test
+    void reserve_잔여정원을_초과하면_실패() {
+        session.reserve(
+                3,
+                LocalDateTime.of(2026, 7, 10, 10, 0)
+        );
+
+        assertThatThrownBy(() -> session.reserve(
+                2,
+                LocalDateTime.of(2026, 7, 10, 11, 0)
+        ))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("예약 가능 인원이 초과되었습니다");
+
+        Assertions.assertEquals(3, session.getReservedCount());
     }
 }
