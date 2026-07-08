@@ -70,6 +70,9 @@ public class ReservationRepositoryTest {
         entityManager.clear();
 
         Reservation res = reservationRepository.findById(reservationId).orElseThrow();
+        boolean alreadyReserved = reservationRepository.existsByMember_IdAndSession_IdAndStatus(
+                member.getId(), climbingSession.getId(), ReservationStatus.CONFIRMED
+        );
 
         Assertions.assertAll(
                 () -> Assertions.assertEquals(reservationId, res.getId()),
@@ -77,7 +80,63 @@ public class ReservationRepositoryTest {
                 () -> Assertions.assertEquals(climbingSession.getId(), res.getSession().getId()),
                 () -> Assertions.assertEquals(2, res.getParticipantCount()),
                 () -> Assertions.assertEquals(ReservationStatus.CONFIRMED, res.getStatus()),
-                () -> Assertions.assertNotNull(res.getCreatedAt())
+                () -> Assertions.assertNotNull(res.getCreatedAt()),
+                () -> Assertions.assertTrue(alreadyReserved)
         );
+    }
+
+    @Test
+    void 확정된_예약이_존재하면_중복_예약_조회가_true를_반환한다(){
+        Member member = Member.create("abc@naver.com", "1234");
+        memberRepository.save(member);
+        Long memberId = member.getId();
+
+        LocalDateTime startAt = LocalDateTime.of(2026, 7, 20, 19, 0);
+        LocalDateTime endAt = LocalDateTime.of(2026, 7, 20, 21, 0);
+        LocalDateTime reservationOpenAt =
+                LocalDateTime.of(2026, 7, 10, 9, 0);
+        LocalDateTime reservationCloseAt =
+                LocalDateTime.of(2026, 7, 20, 18, 0);
+
+        ClimbingSession climbingSession = ClimbingSession.create(
+                "평일 저녁 초보 세션",
+                "광주 온클라이밍",
+                startAt,
+                endAt,
+                reservationOpenAt,
+                reservationCloseAt,
+                2,
+                ClimbingSessionLevel.BEGINNER
+        );
+        climbingSessionRepository.save(climbingSession);
+        Long sessionId = climbingSession.getId();
+
+        Reservation reservation = Reservation.create(
+                member, climbingSession, 2
+        );
+
+        reservationRepository.save(reservation);
+
+        entityManager.flush();
+
+        entityManager.clear();
+
+        boolean alreadyReserved =
+                reservationRepository.existsByMember_IdAndSession_IdAndStatus(
+                        memberId,
+                        sessionId,
+                        ReservationStatus.CONFIRMED
+                );
+
+        Assertions.assertTrue(alreadyReserved);
+
+        boolean canceledReservationExists =
+                reservationRepository.existsByMember_IdAndSession_IdAndStatus(
+                        memberId,
+                        sessionId,
+                        ReservationStatus.CANCELED
+                );
+
+        Assertions.assertFalse(canceledReservationExists);
     }
 }
