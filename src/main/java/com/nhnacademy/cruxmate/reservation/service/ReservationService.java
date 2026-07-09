@@ -53,4 +53,21 @@ public class ReservationService {
 
         return savedReservation.getId();
     }
+
+    @Transactional
+    public Long cancelReservation(Long memberId, Long reservationId){
+        Long sessionId = reservationRepository.findSessionIdByIdAndMemberId(reservationId, memberId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESERVATION_NOT_FOUND));
+        ClimbingSession session = climbingSessionRepository.findByIdForUpdate(sessionId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.CLIMBING_SESSION_NOT_FOUND));
+        Reservation reservation = reservationRepository.findByIdAndMemberIdForUpdate(reservationId, memberId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESERVATION_NOT_FOUND));
+
+        LocalDateTime now = LocalDateTime.now();
+
+        reservation.cancel(now);
+        session.release(reservation.getParticipantCount());
+
+        return reservationId;
+    }
 }

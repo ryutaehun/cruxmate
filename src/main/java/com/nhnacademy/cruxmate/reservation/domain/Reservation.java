@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.cglib.core.Local;
 
 import java.time.LocalDateTime;
 
@@ -81,5 +82,13 @@ public class Reservation {
         if (session == null) {
             throw new IllegalArgumentException("예약 세션은 필수입니다.");
         }
+    }
+
+    public void cancel(LocalDateTime now){
+        if(this.status == ReservationStatus.CANCELED){
+            throw new IllegalStateException("이미 취소된 예약입니다.");
+        }
+        this.status = ReservationStatus.CANCELED;
+        this.canceledAt = now;
     }
 }
