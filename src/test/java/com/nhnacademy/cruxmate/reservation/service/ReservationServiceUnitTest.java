@@ -4,6 +4,7 @@ import com.nhnacademy.cruxmate.common.exception.BusinessException;
 import com.nhnacademy.cruxmate.common.exception.ErrorCode;
 import com.nhnacademy.cruxmate.member.domain.Member;
 import com.nhnacademy.cruxmate.member.repository.MemberRepository;
+import com.nhnacademy.cruxmate.reservation.domain.Reservation;
 import com.nhnacademy.cruxmate.reservation.domain.ReservationStatus;
 import com.nhnacademy.cruxmate.reservation.repository.ReservationRepository;
 import com.nhnacademy.cruxmate.session.domain.ClimbingSession;
@@ -11,6 +12,7 @@ import com.nhnacademy.cruxmate.session.domain.ClimbingSessionLevel;
 import com.nhnacademy.cruxmate.session.repository.ClimbingSessionRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -130,5 +132,102 @@ public class ReservationServiceUnitTest {
                         ReservationStatus.CONFIRMED
                 );
         assertThat(session.getReservedCount()).isZero();
+    }
+
+    @Test
+    void 예약을_정상적으로_취소한다(){
+        Long memberId = 1L;
+        Long reservationId = 10L;
+        Long sessionId = 100L;
+        int participantCount = 2;
+
+        ClimbingSession session = mock(ClimbingSession.class);
+        Reservation reservation = mock(Reservation.class);
+
+        when(reservationRepository.findSessionIdByIdAndMemberId(reservationId, memberId))
+                .thenReturn(Optional.of(sessionId));
+        when(climbingSessionRepository.findByIdForUpdate(sessionId))
+                .thenReturn(Optional.of(session));
+        when(reservationRepository.findByIdAndMemberIdForUpdate(reservationId, memberId))
+                .thenReturn(Optional.of(reservation));
+        when(reservation.getParticipantCount())
+                .thenReturn(participantCount);
+        Long result = reservationService.cancelReservation(memberId, reservationId);
+
+        assertThat(result).isEqualTo(reservationId);
+
+        InOrder inOrder = inOrder(reservationRepository, climbingSessionRepository, reservation, session);
+
+        inOrder.verify(reservationRepository).findSessionIdByIdAndMemberId(reservationId, memberId);
+        inOrder.verify(climbingSessionRepository).findByIdForUpdate(sessionId);
+        inOrder.verify(reservationRepository).findByIdAndMemberIdForUpdate(reservationId, memberId);
+        inOrder.verify(reservation).cancel(any(LocalDateTime.class));
+        inOrder.verify(reservation).getParticipantCount();
+        inOrder.verify(session).release(participantCount);
+    }
+
+    @Test
+    void 예약을_찾을_수_없으면_취소에_실패한다(){
+        Long memberId = 1L;
+        Long reservationId = 10L;
+
+        when(reservationRepository.findSessionIdByIdAndMemberId(reservationId, memberId))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(() ->
+                reservationService.cancelReservation(memberId, reservationId))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.RESERVATION_NOT_FOUND);
+
+        verify(climbingSessionRepository, never()).findByIdForUpdate(anyLong());
+        verify(reservationRepository, never()).findByIdAndMemberIdForUpdate(anyLong(), anyLong());
+    }
+
+    @Test
+    void 세션아이디는_찾았지만_세션이_없는경우_실패한다(){
+        Long memberId = 1L;
+        Long reservationId = 10L;
+        Long sessionId = 100L;
+
+        when(reservationRepository.findSessionIdByIdAndMemberId(reservationId, memberId))
+                .thenReturn(Optional.of(sessionId));
+        when(climbingSessionRepository.findByIdForUpdate(sessionId))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(() ->
+                reservationService.cancelReservation(memberId, reservationId))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.CLIMBING_SESSION_NOT_FOUND);
+
+        verify(reservationRepository, never()).findByIdAndMemberIdForUpdate(anyLong(), anyLong());
+
+    }
+
+    @Test
+    void 예약_락_조회가_실패했을_때_세션_인원이_감소하지_않는다(){
+        Long memberId = 1L;
+        Long reservationId = 10L;
+        Long sessionId = 100L;
+
+        ClimbingSession session = mock(ClimbingSession.class);
+
+        when(reservationRepository.findSessionIdByIdAndMemberId(reservationId, memberId))
+                .thenReturn(Optional.of(sessionId));
+        when(climbingSessionRepository.findByIdForUpdate(sessionId))
+                .thenReturn(Optional.of(session));
+        when(reservationRepository.findByIdAndMemberIdForUpdate(reservationId, memberId))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(() ->
+                reservationService.cancelReservation(memberId, reservationId))
+                .isInstanceOfSatisfying(
+                        BusinessException.class,
+                        exception -> assertThat(exception.getErrorCode())
+                                .isEqualTo(ErrorCode.RESERVATION_NOT_FOUND)
+                );
+
+        verify(session, never()).release(anyInt());
     }
 }

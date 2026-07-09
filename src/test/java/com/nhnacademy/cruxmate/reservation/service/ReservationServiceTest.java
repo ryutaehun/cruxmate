@@ -70,7 +70,7 @@ public class ReservationServiceTest {
         entityManager.clear();
 
         Reservation savedReservation = reservationRepository.findById(reservationId).orElseThrow(
-                () -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND)
+                () -> new BusinessException(ErrorCode.RESERVATION_NOT_FOUND)
         );
         ClimbingSession savedClimbingSession = climbingSessionRepository.findById(session.getId()).orElseThrow(
                 () -> new BusinessException(ErrorCode.CLIMBING_SESSION_NOT_FOUND)
@@ -83,5 +83,54 @@ public class ReservationServiceTest {
         assertThat(savedReservation.getMember().getId()).isEqualTo(member.getId());
         assertThat(savedReservation.getSession().getId()).isEqualTo(session.getId());
         assertThat(savedClimbingSession.getReservedCount()).isEqualTo(2);
+    }
+
+    @Test
+    void 예약을_취소하면_상태가_변경되고_세션_예약인원이_감소한다(){
+        Member member = Member.create("fbxogns321@naver.com", "1234");
+        memberRepository.save(member);
+
+        LocalDateTime now = LocalDateTime.now();
+
+        ClimbingSession session = ClimbingSession.create(
+                "평일 저녁 초보 세션",
+                "광주 온클라이밍",
+                now.plusDays(2),
+                now.plusDays(2).plusHours(2),
+                now.minusDays(1),
+                now.plusDays(1),
+                5,
+                ClimbingSessionLevel.BEGINNER
+        );
+        climbingSessionRepository.save(session);
+
+        Long reservationId = reservationService.createReservation(
+                member.getId(),
+                session.getId(),
+                2
+        );
+
+        entityManager.flush();
+        entityManager.clear();
+
+        Long canceledReservationId = reservationService.cancelReservation(member.getId(), reservationId);
+
+        entityManager.flush();
+        entityManager.clear();
+
+        Reservation canceledReservation =
+                reservationRepository.findById(reservationId)
+                        .orElseThrow();
+
+        ClimbingSession updatedSession =
+                climbingSessionRepository.findById(session.getId())
+                        .orElseThrow();
+
+        assertThat(canceledReservationId).isEqualTo(reservationId);
+        assertThat(canceledReservation.getStatus())
+                .isEqualTo(ReservationStatus.CANCELED);
+        assertThat(canceledReservation.getCanceledAt()).isNotNull();
+        assertThat(updatedSession.getReservedCount()).isZero();
+
     }
 }

@@ -146,9 +146,19 @@ public class ClimbingSession {
         if(now.isBefore(reservationOpenAt) || !now.isBefore(reservationCloseAt)){
             throw new IllegalArgumentException("예약 가능 기간이 아닙니다");
         }
-        if(reservedCount + participantCount > capacity){
+        if(this.reservedCount + participantCount > capacity){
             throw new IllegalArgumentException("예약 가능 인원이 초과되었습니다");
         }
-        reservedCount += participantCount;
+        this.reservedCount += participantCount;
+    }
+
+    public void release(int participantCount){
+        if(participantCount < 1){
+            throw new IllegalArgumentException("취소 인원은 1명 이상이어야 합니다.");
+        }
+        if(this.reservedCount - participantCount < 0){
+            throw new IllegalStateException("예약 인원보다 더 많은 인원을 취소할 수 없습니다.");
+        }
+        this.reservedCount -= participantCount;
     }
 }
