@@ -10,13 +10,14 @@ import com.nhnacademy.cruxmate.session.domain.ClimbingSessionLevel;
 import com.nhnacademy.cruxmate.session.repository.ClimbingSessionRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.context.annotation.Import;
 
 import java.time.LocalDateTime;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
 @Import(TestcontainersConfiguration.class)
@@ -74,15 +75,13 @@ public class ReservationRepositoryTest {
                 member.getId(), climbingSession.getId(), ReservationStatus.CONFIRMED
         );
 
-        Assertions.assertAll(
-                () -> Assertions.assertEquals(reservationId, res.getId()),
-                () -> Assertions.assertEquals(member.getId(), res.getMember().getId()),
-                () -> Assertions.assertEquals(climbingSession.getId(), res.getSession().getId()),
-                () -> Assertions.assertEquals(2, res.getParticipantCount()),
-                () -> Assertions.assertEquals(ReservationStatus.CONFIRMED, res.getStatus()),
-                () -> Assertions.assertNotNull(res.getCreatedAt()),
-                () -> Assertions.assertTrue(alreadyReserved)
-        );
+        assertThat(res.getId()).isEqualTo(reservationId);
+        assertThat(res.getMember().getId()).isEqualTo(member.getId());
+        assertThat(res.getSession().getId()).isEqualTo(climbingSession.getId());
+        assertThat(res.getParticipantCount()).isEqualTo(2);
+        assertThat(res.getStatus()).isEqualTo(ReservationStatus.CONFIRMED);
+        assertThat(res.getCreatedAt()).isNotNull();
+        assertThat(alreadyReserved).isTrue();
     }
 
     @Test
@@ -128,7 +127,7 @@ public class ReservationRepositoryTest {
                         ReservationStatus.CONFIRMED
                 );
 
-        Assertions.assertTrue(alreadyReserved);
+        assertThat(alreadyReserved).isTrue();
 
         boolean canceledReservationExists =
                 reservationRepository.existsByMember_IdAndSession_IdAndStatus(
@@ -137,6 +136,6 @@ public class ReservationRepositoryTest {
                         ReservationStatus.CANCELED
                 );
 
-        Assertions.assertFalse(canceledReservationExists);
+        assertThat(canceledReservationExists).isFalse();
     }
 }

@@ -13,7 +13,6 @@ import com.nhnacademy.cruxmate.session.domain.ClimbingSessionLevel;
 import com.nhnacademy.cruxmate.session.repository.ClimbingSessionRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
@@ -79,15 +78,10 @@ public class ReservationServiceTest {
 
         assertThat(reservationId).isNotNull();
 
-        Assertions.assertAll(
-                () -> assertThat(savedReservation.getParticipantCount()).isEqualTo(2),
-                () -> assertThat(savedReservation.getStatus())
-                        .isEqualTo(ReservationStatus.CONFIRMED),
-                () -> assertThat(savedReservation.getMember().getId())
-                        .isEqualTo(member.getId()),
-                () -> assertThat(savedReservation.getSession().getId())
-                        .isEqualTo(session.getId()),
-                () -> assertThat(savedClimbingSession.getReservedCount()).isEqualTo(2)
-        );
+        assertThat(savedReservation.getParticipantCount()).isEqualTo(2);
+        assertThat(savedReservation.getStatus()).isEqualTo(ReservationStatus.CONFIRMED);
+        assertThat(savedReservation.getMember().getId()).isEqualTo(member.getId());
+        assertThat(savedReservation.getSession().getId()).isEqualTo(session.getId());
+        assertThat(savedClimbingSession.getReservedCount()).isEqualTo(2);
     }
 }

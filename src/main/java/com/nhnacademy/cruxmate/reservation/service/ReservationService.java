@@ -32,7 +32,7 @@ public class ReservationService {
         Member member = memberRepository.findById(memberId).orElseThrow(
                 () -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND)
         );
-        ClimbingSession climbingSession = climbingSessionRepository.findById(sessionId).orElseThrow(
+        ClimbingSession climbingSession = climbingSessionRepository.findByIdForUpdate(sessionId).orElseThrow(
                 () -> new BusinessException(ErrorCode.CLIMBING_SESSION_NOT_FOUND)
         );
 
