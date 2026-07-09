@@ -3,7 +3,6 @@ package com.nhnacademy.cruxmate.reservation.domain;
 import com.nhnacademy.cruxmate.member.domain.Member;
 import com.nhnacademy.cruxmate.session.domain.ClimbingSession;
 import com.nhnacademy.cruxmate.session.domain.ClimbingSessionLevel;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -47,12 +46,10 @@ public class ReservationTest {
                 member, session, 2
         );
 
-        Assertions.assertAll(
-                () -> Assertions.assertEquals(2, reservation.getParticipantCount()),
-                () -> Assertions.assertEquals(ReservationStatus.CONFIRMED, reservation.getStatus()),
-                () -> assertThat(reservation.getMember()).isSameAs(member),
-                () -> assertThat(reservation.getSession()).isSameAs(session)
-        );
+        assertThat(reservation.getParticipantCount()).isEqualTo(2);
+        assertThat(reservation.getStatus()).isEqualTo(ReservationStatus.CONFIRMED);
+        assertThat(reservation.getMember()).isSameAs(member);
+        assertThat(reservation.getSession()).isSameAs(session);
     }
 
     @Test
@@ -94,7 +91,7 @@ public class ReservationTest {
     @Test
     void reserve_정상(){
         session.reserve(3, LocalDateTime.of(2026, 7, 10, 9, 0));
-        Assertions.assertEquals(3, session.getReservedCount());
+        assertThat(session.getReservedCount()).isEqualTo(3);
     }
 
     @Test
@@ -109,7 +106,9 @@ public class ReservationTest {
 
     @Test
     void reserve_시작_마감_경계테스트(){
-        Assertions.assertDoesNotThrow(() -> session.reserve(2, LocalDateTime.of(2026, 7, 10, 9, 0)));
+        session.reserve(2, LocalDateTime.of(2026, 7, 10, 9, 0));
+        assertThat(session.getReservedCount()).isEqualTo(2);
+
         assertThatThrownBy(() -> session.reserve(
                 2, LocalDateTime.of(2026, 7, 20, 18, 0))
         ).isInstanceOf(IllegalArgumentException.class).hasMessage("예약 가능 기간이 아닙니다");
@@ -139,6 +138,6 @@ public class ReservationTest {
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("예약 가능 인원이 초과되었습니다");
 
-        Assertions.assertEquals(3, session.getReservedCount());
+        assertThat(session.getReservedCount()).isEqualTo(3);
     }
 }

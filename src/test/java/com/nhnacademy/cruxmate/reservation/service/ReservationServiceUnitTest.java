@@ -9,7 +9,6 @@ import com.nhnacademy.cruxmate.reservation.repository.ReservationRepository;
 import com.nhnacademy.cruxmate.session.domain.ClimbingSession;
 import com.nhnacademy.cruxmate.session.domain.ClimbingSessionLevel;
 import com.nhnacademy.cruxmate.session.repository.ClimbingSessionRepository;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -19,6 +18,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -43,14 +44,14 @@ public class ReservationServiceUnitTest {
 
         when(memberRepository.findById(memberId)).thenReturn(Optional.empty());
 
-        Assertions.assertThatThrownBy(() ->
+        assertThatThrownBy(() ->
                 reservationService.createReservation(memberId, sessionId, 2))
                 .isInstanceOf(BusinessException.class)
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.MEMBER_NOT_FOUND);
 
         verify(memberRepository).findById(memberId);
-        verify(climbingSessionRepository, never()).findById(anyLong());
+        verify(climbingSessionRepository, never()).findByIdForUpdate(anyLong());
         verify(reservationRepository, never()).save(any());
     }
 
@@ -67,17 +68,17 @@ public class ReservationServiceUnitTest {
         when(memberRepository.findById(memberId))
                 .thenReturn(Optional.of(member));
 
-        when(climbingSessionRepository.findById(sessionId))
+        when(climbingSessionRepository.findByIdForUpdate(sessionId))
                 .thenReturn(Optional.empty());
 
-        Assertions.assertThatThrownBy(() ->
+        assertThatThrownBy(() ->
                 reservationService.createReservation(memberId, sessionId, 2))
                 .isInstanceOf(BusinessException.class)
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.CLIMBING_SESSION_NOT_FOUND);
 
         verify(memberRepository).findById(memberId);
-        verify(climbingSessionRepository).findById(sessionId);
+        verify(climbingSessionRepository).findByIdForUpdate(sessionId);
         verify(reservationRepository, never()).save(any());
     }
 
@@ -110,12 +111,12 @@ public class ReservationServiceUnitTest {
         );
 
         when(memberRepository.findById(memberId)).thenReturn(Optional.of(member));
-        when(climbingSessionRepository.findById(sessionId)).thenReturn(Optional.of(session));
+        when(climbingSessionRepository.findByIdForUpdate(sessionId)).thenReturn(Optional.of(session));
         when(reservationRepository.existsByMember_IdAndSession_IdAndStatus(
                 memberId, sessionId, ReservationStatus.CONFIRMED
         )).thenReturn(true);
 
-        Assertions.assertThatThrownBy(
+        assertThatThrownBy(
                 () -> reservationService.createReservation(memberId, sessionId, 2))
                 .isInstanceOf(BusinessException.class)
                 .extracting("errorCode")
@@ -128,6 +129,6 @@ public class ReservationServiceUnitTest {
                         sessionId,
                         ReservationStatus.CONFIRMED
                 );
-        Assertions.assertThat(session.getReservedCount()).isZero();
+        assertThat(session.getReservedCount()).isZero();
     }
 }
