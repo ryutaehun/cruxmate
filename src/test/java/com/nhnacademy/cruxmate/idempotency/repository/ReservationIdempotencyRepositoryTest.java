@@ -5,6 +5,10 @@ import com.nhnacademy.cruxmate.idempotency.domain.IdempotencyStatus;
 import com.nhnacademy.cruxmate.idempotency.domain.ReservationIdempotency;
 import com.nhnacademy.cruxmate.member.domain.Member;
 import com.nhnacademy.cruxmate.member.repository.MemberRepository;
+import com.nhnacademy.cruxmate.reservation.domain.Reservation;
+import com.nhnacademy.cruxmate.reservation.repository.ReservationRepository;
+import com.nhnacademy.cruxmate.session.domain.ClimbingSession;
+import com.nhnacademy.cruxmate.session.repository.ClimbingSessionRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.junit.jupiter.api.Test;
@@ -13,7 +17,10 @@ import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.dao.DataIntegrityViolationException;
 
+import java.time.LocalDateTime;
+
 import static com.nhnacademy.cruxmate.support.TestFixtures.createMember;
+import static com.nhnacademy.cruxmate.support.TestFixtures.createSession;
 import static org.assertj.core.api.Assertions.*;
 
 @DataJpaTest
@@ -25,6 +32,12 @@ class ReservationIdempotencyRepositoryTest {
 
     @Autowired
     private MemberRepository memberRepository;
+
+    @Autowired
+    private ReservationRepository reservationRepository;
+
+    @Autowired
+    private ClimbingSessionRepository climbingSessionRepository;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -139,5 +152,50 @@ class ReservationIdempotencyRepositoryTest {
                                 "same-key"
                         )
         ).isPresent();
+    }
+
+    @Test
+    void 예약_처리가_완료되면_예약과_완료_상태가_DB에_반영된다() {
+        Member member = createMember("complete-idempotency@example.com");
+        memberRepository.save(member);
+
+        ClimbingSession session = createSession();
+        climbingSessionRepository.save(session);
+
+        ReservationIdempotency idempotency =
+                ReservationIdempotency.create(
+                        member,
+                        "complete-key",
+                        "a".repeat(64)
+                );
+
+        idempotencyRepository.saveAndFlush(idempotency);
+
+        Reservation reservation =
+                Reservation.create(member, session, 1);
+
+        reservationRepository.saveAndFlush(reservation);
+
+        LocalDateTime completedAt =
+                LocalDateTime.of(2026, 7, 10, 11, 0);
+
+        idempotency.complete(reservation, completedAt);
+
+        Long idempotencyId = idempotency.getId();
+        Long reservationId = reservation.getId();
+
+        entityManager.flush();
+        entityManager.clear();
+
+        ReservationIdempotency found =
+                idempotencyRepository.findById(idempotencyId)
+                        .orElseThrow();
+
+        assertThat(found.getStatus())
+                .isEqualTo(IdempotencyStatus.COMPLETED);
+        assertThat(found.getCompletedAt())
+                .isEqualTo(completedAt);
+        assertThat(found.getReservation().getId())
+                .isEqualTo(reservationId);
     }
 }

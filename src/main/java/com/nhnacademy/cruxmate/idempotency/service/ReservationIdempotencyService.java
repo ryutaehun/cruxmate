@@ -2,6 +2,7 @@ package com.nhnacademy.cruxmate.idempotency.service;
 
 import com.nhnacademy.cruxmate.common.exception.BusinessException;
 import com.nhnacademy.cruxmate.common.exception.ErrorCode;
+import com.nhnacademy.cruxmate.idempotency.domain.IdempotencyStatus;
 import com.nhnacademy.cruxmate.idempotency.domain.ReservationIdempotency;
 import com.nhnacademy.cruxmate.idempotency.repository.ReservationIdempotencyRepository;
 import com.nhnacademy.cruxmate.member.domain.Member;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -32,6 +34,18 @@ public class ReservationIdempotencyService {
             String idempotencyKey,
             String requestHash
     ){
+        Optional<ReservationIdempotency> existing = idempotencyRepository.findByMemberIdAndIdempotencyKey(
+                memberId, idempotencyKey
+        );
+
+        if(existing.isPresent()){
+            ReservationIdempotency idempotency = existing.get();
+
+            if(idempotency.getRequestHash().equals(requestHash) && idempotency.getStatus() == IdempotencyStatus.COMPLETED){
+                return idempotency.getReservation().getId();
+            }
+        }
+
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
 
