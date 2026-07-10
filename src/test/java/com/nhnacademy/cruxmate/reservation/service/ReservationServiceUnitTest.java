@@ -8,7 +8,6 @@ import com.nhnacademy.cruxmate.reservation.domain.Reservation;
 import com.nhnacademy.cruxmate.reservation.domain.ReservationStatus;
 import com.nhnacademy.cruxmate.reservation.repository.ReservationRepository;
 import com.nhnacademy.cruxmate.session.domain.ClimbingSession;
-import com.nhnacademy.cruxmate.session.domain.ClimbingSessionLevel;
 import com.nhnacademy.cruxmate.session.repository.ClimbingSessionRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,12 +19,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
+import static com.nhnacademy.cruxmate.support.TestFixtures.createMember;
+import static com.nhnacademy.cruxmate.support.TestFixtures.createSession;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class ReservationServiceUnitTest {
+class ReservationServiceUnitTest {
 
     @Mock
     private ReservationRepository reservationRepository;
@@ -40,7 +41,7 @@ public class ReservationServiceUnitTest {
     private ReservationService reservationService;
 
     @Test
-    void 회원이_없으면_MEMBER_NOT_FOUND(){
+    void 회원이_없으면_MEMBER_NOT_FOUND를_던진다() {
         Long memberId = 1L;
         Long sessionId = 1L;
 
@@ -58,14 +59,11 @@ public class ReservationServiceUnitTest {
     }
 
     @Test
-    void 세션이_없으면_CLIMBING_SESSION_NOT_FOUND(){
+    void 세션이_없으면_CLIMBING_SESSION_NOT_FOUND를_던진다() {
         Long memberId = 1L;
         Long sessionId = 1L;
 
-        Member member = Member.create(
-                "fbxogns321@naver.com",
-                "1234"
-        );
+        Member member = createMember();
 
         when(memberRepository.findById(memberId))
                 .thenReturn(Optional.of(member));
@@ -85,32 +83,12 @@ public class ReservationServiceUnitTest {
     }
 
     @Test
-    void 이미_확정된_예약이_있으면_DUPLICATE_RESERVATION(){
+    void 이미_확정된_예약이_있으면_DUPLICATE_RESERVATION을_던진다() {
         Long memberId = 1L;
         Long sessionId = 1L;
 
-        Member member = Member.create(
-                "fbxogns321@naver.com",
-                "1234"
-        );
-
-        LocalDateTime startAt = LocalDateTime.of(2026, 7, 20, 19, 0);
-        LocalDateTime endAt = LocalDateTime.of(2026, 7, 20, 21, 0);
-        LocalDateTime reservationOpenAt =
-                LocalDateTime.of(2026, 7, 10, 9, 0);
-        LocalDateTime reservationCloseAt =
-                LocalDateTime.of(2026, 7, 20, 18, 0);
-
-        ClimbingSession session = ClimbingSession.create(
-                "평일 저녁 초보 세션",
-                "광주 온클라이밍",
-                startAt,
-                endAt,
-                reservationOpenAt,
-                reservationCloseAt,
-                4,
-                ClimbingSessionLevel.BEGINNER
-        );
+        Member member = createMember();
+        ClimbingSession session = createSession();
 
         when(memberRepository.findById(memberId)).thenReturn(Optional.of(member));
         when(climbingSessionRepository.findByIdForUpdate(sessionId)).thenReturn(Optional.of(session));
@@ -135,7 +113,7 @@ public class ReservationServiceUnitTest {
     }
 
     @Test
-    void 예약을_정상적으로_취소한다(){
+    void 예약을_정상적으로_취소한다() {
         Long memberId = 1L;
         Long reservationId = 10L;
         Long sessionId = 100L;
@@ -167,7 +145,7 @@ public class ReservationServiceUnitTest {
     }
 
     @Test
-    void 예약을_찾을_수_없으면_취소에_실패한다(){
+    void 예약을_찾을_수_없으면_취소에_실패한다() {
         Long memberId = 1L;
         Long reservationId = 10L;
 
@@ -185,7 +163,7 @@ public class ReservationServiceUnitTest {
     }
 
     @Test
-    void 세션아이디는_찾았지만_세션이_없는경우_실패한다(){
+    void 예약의_세션을_찾을_수_없으면_취소에_실패한다() {
         Long memberId = 1L;
         Long reservationId = 10L;
         Long sessionId = 100L;
@@ -206,7 +184,7 @@ public class ReservationServiceUnitTest {
     }
 
     @Test
-    void 예약_락_조회가_실패했을_때_세션_인원이_감소하지_않는다(){
+    void 예약을_락으로_조회하지_못하면_세션_인원이_감소하지_않는다() {
         Long memberId = 1L;
         Long reservationId = 10L;
         Long sessionId = 100L;

@@ -10,7 +10,6 @@ import com.nhnacademy.cruxmate.reservation.domain.ReservationStatus;
 import com.nhnacademy.cruxmate.reservation.repository.ReservationRepository;
 import com.nhnacademy.cruxmate.reservation.service.ReservationService;
 import com.nhnacademy.cruxmate.session.domain.ClimbingSession;
-import com.nhnacademy.cruxmate.session.domain.ClimbingSessionLevel;
 import com.nhnacademy.cruxmate.session.repository.ClimbingSessionRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.assertj.core.api.InstanceOfAssertFactories;
@@ -25,13 +24,15 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static com.nhnacademy.cruxmate.support.TestFixtures.createMember;
+import static com.nhnacademy.cruxmate.support.TestFixtures.createSession;
 import static org.assertj.core.api.Assertions.assertThat;
 
 
 @Slf4j
 @SpringBootTest
 @Import({TestcontainersConfiguration.class})
-public class ReservationConcurrencyTest {
+class ReservationConcurrencyTest {
 
     @Autowired
     private ReservationService reservationService;
@@ -46,9 +47,9 @@ public class ReservationConcurrencyTest {
     private ReservationRepository reservationRepository;
 
     @Test
-    void 마지막_한_자리에_두_회원이_동시에_예약한다() throws Exception{
-        Member member1 = Member.create("abc@naver.com", "1234");
-        Member member2 = Member.create("def@naver.com", "5678");
+    void 마지막_한_자리에_두_회원이_동시에_예약하면_하나만_성공한다() throws Exception {
+        Member member1 = createMember("concurrency-first@example.com");
+        Member member2 = createMember("concurrency-second@example.com");
         memberRepository.save(member1);
         memberRepository.save(member2);
 
@@ -58,15 +59,12 @@ public class ReservationConcurrencyTest {
         LocalDateTime startAt = now.plusDays(2);
         LocalDateTime endAt = now.plusDays(2).plusHours(2);
 
-        ClimbingSession session = ClimbingSession.create(
-                "평일 저녁 초보 세션",
-                "광주 온클라이밍",
+        ClimbingSession session = createSession(
                 startAt,
                 endAt,
                 reservationOpenAt,
                 reservationCloseAt,
-                1,
-                ClimbingSessionLevel.BEGINNER
+                1
         );
         climbingSessionRepository.save(session);
 
@@ -157,7 +155,7 @@ public class ReservationConcurrencyTest {
 
     @Test
     void 같은_예약을_동시에_취소해도_인원이_한번만_감소한다() throws Exception {
-        Member member = Member.create("fbxogns321@naver.com", "1234");
+        Member member = createMember("concurrency-cancel@example.com");
         memberRepository.save(member);
 
         Long memberId = member.getId();
@@ -168,15 +166,12 @@ public class ReservationConcurrencyTest {
         LocalDateTime startAt = now.plusDays(2);
         LocalDateTime endAt = now.plusDays(2).plusHours(2);
 
-        ClimbingSession session = ClimbingSession.create(
-                "평일 저녁 초보 세션",
-                "광주 온클라이밍",
+        ClimbingSession session = createSession(
                 startAt,
                 endAt,
                 reservationOpenAt,
                 reservationCloseAt,
-                4,
-                ClimbingSessionLevel.BEGINNER
+                4
         );
         climbingSessionRepository.save(session);
 
