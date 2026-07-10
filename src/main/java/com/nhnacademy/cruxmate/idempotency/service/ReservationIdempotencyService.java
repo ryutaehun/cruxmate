@@ -41,7 +41,13 @@ public class ReservationIdempotencyService {
         if(existing.isPresent()){
             ReservationIdempotency idempotency = existing.get();
 
-            if(idempotency.getRequestHash().equals(requestHash) && idempotency.getStatus() == IdempotencyStatus.COMPLETED){
+            if (!idempotency.getRequestHash().equals(requestHash)) {
+                throw new BusinessException(
+                        ErrorCode.IDEMPOTENCY_KEY_CONFLICT
+                );
+            }
+
+            if (idempotency.getStatus() == IdempotencyStatus.COMPLETED) {
                 return idempotency.getReservation().getId();
             }
         }

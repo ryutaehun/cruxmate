@@ -197,4 +197,32 @@ public class ReservationIdempotencyServiceUnitTest {
                 reservationService
         );
     }
+
+    @Test
+    void 같은_멱등성_키를_다른_요청에_사용하면_실패한다(){
+        Long memberId = 1L;
+        String idempotencyKey = "reservation-key-123";
+
+        Member member = createMember("idempotency-conflict@example.com");
+
+        ReservationIdempotency existing = ReservationIdempotency.create(
+                member,
+                idempotencyKey,
+                "a".repeat(64)
+        );
+
+        when(idempotencyRepository.findByMemberIdAndIdempotencyKey(
+                memberId, idempotencyKey
+        )).thenReturn(Optional.of(existing));
+
+        assertThatThrownBy(() ->
+                reservationIdempotencyService.createReservation(
+                        memberId, 10L, 2, idempotencyKey, "b".repeat(64)
+                )
+        ).isInstanceOf(BusinessException.class);
+
+        verify(idempotencyRepository).findByMemberIdAndIdempotencyKey(memberId, idempotencyKey);
+        verify(idempotencyRepository, never()).saveAndFlush(any());
+        verifyNoInteractions(memberRepository, reservationRepository, reservationService);
+    }
 }
