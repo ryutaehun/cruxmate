@@ -17,5 +17,15 @@ Content-Type: application/json
   "level": "BEGINNER"
 }
 
+### 잘못된 세션 생성
+POST {{baseUrl}}/api/sessions
+Content-Type: application/json
+
+{
+  "title": "",
+  "location": "",
+  "capacity": 0
+}
+
 ### 세션 조회
 GET {{baseUrl}}/api/sessions/{{sessionId}}

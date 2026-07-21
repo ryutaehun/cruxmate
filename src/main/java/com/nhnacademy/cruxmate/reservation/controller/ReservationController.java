@@ -4,6 +4,7 @@ import com.nhnacademy.cruxmate.idempotency.service.ReservationIdempotencyService
 import com.nhnacademy.cruxmate.idempotency.support.ReservationRequestHashGenerator;
 import com.nhnacademy.cruxmate.reservation.dto.ReservationCreateRequest;
 import com.nhnacademy.cruxmate.reservation.dto.ReservationCreateResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -20,7 +21,7 @@ public class ReservationController {
     @ResponseStatus(HttpStatus.CREATED)
     public ReservationCreateResponse createReservation(@RequestHeader("X-MEMBER-ID") Long memberId,
                                                        @RequestHeader("Idempotency-Key") String idempotencyKey,
-                                                       @RequestBody ReservationCreateRequest request){
+                                                       @Valid @RequestBody ReservationCreateRequest request){
         String requestHash = requestHashGenerator.generate(memberId, request.sessionId(), request.participantCount());
 
         Long reservationId = idempotencyService.createReservation(memberId, request.sessionId(), request.participantCount(), idempotencyKey, requestHash);
