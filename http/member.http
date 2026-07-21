@@ -1,0 +1,10 @@
+@baseUrl = http://localhost:8080
+
+### 멤버 생성
+POST http://localhost:8080/api/members
+Content-Type: application/json
+
+{
+  "email": "member@example.com",
+  "password": "password123!"
+}

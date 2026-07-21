@@ -15,4 +15,5 @@ public class SecurityConfig {
                         .requestMatchers("/api/**").permitAll()
                         .anyRequest().permitAll()).build();
     }
+
 }
