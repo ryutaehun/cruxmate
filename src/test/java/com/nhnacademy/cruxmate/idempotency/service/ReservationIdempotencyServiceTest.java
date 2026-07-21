@@ -2,6 +2,7 @@ package com.nhnacademy.cruxmate.idempotency.service;
 
 import com.nhnacademy.cruxmate.TestcontainersConfiguration;
 import com.nhnacademy.cruxmate.common.exception.BusinessException;
+import com.nhnacademy.cruxmate.common.exception.ErrorCode;
 import com.nhnacademy.cruxmate.idempotency.domain.IdempotencyStatus;
 import com.nhnacademy.cruxmate.idempotency.domain.ReservationIdempotency;
 import com.nhnacademy.cruxmate.idempotency.repository.ReservationIdempotencyRepository;
@@ -203,5 +204,38 @@ class ReservationIdempotencyServiceTest {
                 .isEqualTo(firstReservationId);
         assertThat(idempotency.getStatus())
                 .isEqualTo(IdempotencyStatus.COMPLETED);
+    }
+
+    @Test
+    void 동일한_키와_동일한_요청이_PROCESSING_상태이면_예약을_생성하지_않는다() {
+        Member member = createMember("idempotency-processing-integration@example.com");
+        memberRepository.save(member);
+
+        String idempotencyKey = "processing-key-123";
+        String requestHash = "a".repeat(64);
+
+        ReservationIdempotency processing =
+                ReservationIdempotency.create(
+                        member,
+                        idempotencyKey,
+                        requestHash
+                );
+
+        idempotencyRepository.saveAndFlush(processing);
+
+        assertThatThrownBy(() ->
+                idempotencyService.createReservation(
+                        member.getId(),
+                        10L,
+                        2,
+                        idempotencyKey,
+                        requestHash
+                )
+        )
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.IDEMPOTENCY_REQUEST_PROCESSING);
+
+        assertThat(reservationRepository.count()).isZero();
     }
 }

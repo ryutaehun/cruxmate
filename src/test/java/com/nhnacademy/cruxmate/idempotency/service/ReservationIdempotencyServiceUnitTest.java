@@ -1,6 +1,7 @@
 package com.nhnacademy.cruxmate.idempotency.service;
 
 import com.nhnacademy.cruxmate.common.exception.BusinessException;
+import com.nhnacademy.cruxmate.common.exception.ErrorCode;
 import com.nhnacademy.cruxmate.idempotency.domain.IdempotencyStatus;
 import com.nhnacademy.cruxmate.idempotency.domain.ReservationIdempotency;
 import com.nhnacademy.cruxmate.idempotency.repository.ReservationIdempotencyRepository;
@@ -222,6 +223,45 @@ public class ReservationIdempotencyServiceUnitTest {
         ).isInstanceOf(BusinessException.class);
 
         verify(idempotencyRepository).findByMemberIdAndIdempotencyKey(memberId, idempotencyKey);
+        verify(idempotencyRepository, never()).saveAndFlush(any());
+        verifyNoInteractions(memberRepository, reservationRepository, reservationService);
+    }
+
+    @Test
+    void 같은_멱등성_키와_같은_요청이_처리중이면_실패한다() {
+        Long memberId = 1L;
+        String idempotencyKey = "reservation-key-123";
+        String requestHash = "a".repeat(64);
+
+        Member member = createMember("idempotency-processing@example.com");
+
+        ReservationIdempotency existing = ReservationIdempotency.create(
+                member,
+                idempotencyKey,
+                requestHash
+        );
+
+        when(idempotencyRepository.findByMemberIdAndIdempotencyKey(
+                memberId,
+                idempotencyKey
+        )).thenReturn(Optional.of(existing));
+
+        assertThatThrownBy(() ->
+                reservationIdempotencyService.createReservation(
+                        memberId,
+                        10L,
+                        2,
+                        idempotencyKey,
+                        requestHash
+                )
+        )
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.IDEMPOTENCY_REQUEST_PROCESSING);
+
+        verify(idempotencyRepository)
+                .findByMemberIdAndIdempotencyKey(memberId, idempotencyKey);
+
         verify(idempotencyRepository, never()).saveAndFlush(any());
         verifyNoInteractions(memberRepository, reservationRepository, reservationService);
     }

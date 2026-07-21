@@ -50,6 +50,10 @@ public class ReservationIdempotencyService {
             if (idempotency.getStatus() == IdempotencyStatus.COMPLETED) {
                 return idempotency.getReservation().getId();
             }
+
+            if (idempotency.getStatus() == IdempotencyStatus.PROCESSING){
+                throw new BusinessException(ErrorCode.IDEMPOTENCY_REQUEST_PROCESSING);
+            }
         }
 
         Member member = memberRepository.findById(memberId)
