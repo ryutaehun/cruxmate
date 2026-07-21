@@ -1,10 +1,36 @@
+@baseUrl = http://localhost:8080
+@memberId = 1
+@sessionId = 1
+
 ### 예약 생성
-POST localhost:8080/api/reservations
-X-MEMBER-ID: 1
+POST {{baseUrl}}/api/reservations
+X-MEMBER-ID: {{memberId}}
 Idempotency-Key: reservation-key-123
 Content-Type: application/json
 
 {
-  "sessionId": 10,
+  "sessionId": {{sessionId}},
   "participantCount": 2
+}
+
+### 같은 Idempotency-Key / 같은 요청 재시도
+POST {{baseUrl}}/api/reservations
+X-MEMBER-ID: {{memberId}}
+Idempotency-Key: reservation-key-123
+Content-Type: application/json
+
+{
+  "sessionId": {{sessionId}},
+  "participantCount": 2
+}
+
+### 같은 Idempotency-Key / 다른 요청 - 실패 예상
+POST {{baseUrl}}/api/reservations
+X-MEMBER-ID: {{memberId}}
+Idempotency-Key: reservation-key-123
+Content-Type: application/json
+
+{
+  "sessionId": {{sessionId}},
+  "participantCount": 3
 }

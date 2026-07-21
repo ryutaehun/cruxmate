@@ -1,5 +1,9 @@
+@baseUrl = http://localhost:8080
+@memberId = 1
+@sessionId = 1
+
 ### 세션 생성
-POST http://localhost:8080/api/sessions
+POST {{baseUrl}}/api/sessions
 Content-Type: application/json
 
 {
@@ -12,3 +16,6 @@ Content-Type: application/json
   "capacity": 5,
   "level": "BEGINNER"
 }
+
+### 세션 조회
+GET {{baseUrl}}/api/sessions/{{sessionId}}
