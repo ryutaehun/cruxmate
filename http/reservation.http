@@ -1,0 +1,10 @@
+### 예약 생성
+POST localhost:8080/api/reservations
+X-MEMBER-ID: 1
+Idempotency-Key: reservation-key-123
+Content-Type: application/json
+
+{
+  "sessionId": 10,
+  "participantCount": 2
+}
