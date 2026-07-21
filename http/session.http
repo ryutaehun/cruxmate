@@ -1,0 +1,14 @@
+### 세션 생성
+POST http://localhost:8080/api/sessions
+Content-Type: application/json
+
+{
+  "title": "평일 저녁 초보 세션",
+  "location": "광주 온클라이밍",
+  "startAt": "2026-08-01T19:00:00",
+  "endAt": "2026-08-01T21:00:00",
+  "reservationOpenAt": "2026-07-21T09:00:00",
+  "reservationCloseAt": "2026-08-01T18:00:00",
+  "capacity": 5,
+  "level": "BEGINNER"
+}
