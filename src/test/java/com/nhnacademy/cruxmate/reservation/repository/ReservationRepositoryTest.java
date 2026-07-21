@@ -6,7 +6,6 @@ import com.nhnacademy.cruxmate.member.repository.MemberRepository;
 import com.nhnacademy.cruxmate.reservation.domain.Reservation;
 import com.nhnacademy.cruxmate.reservation.domain.ReservationStatus;
 import com.nhnacademy.cruxmate.session.domain.ClimbingSession;
-import com.nhnacademy.cruxmate.session.domain.ClimbingSessionLevel;
 import com.nhnacademy.cruxmate.session.repository.ClimbingSessionRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -15,13 +14,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.context.annotation.Import;
 
-import java.time.LocalDateTime;
-
+import static com.nhnacademy.cruxmate.support.TestFixtures.createMember;
+import static com.nhnacademy.cruxmate.support.TestFixtures.createSession;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
 @Import(TestcontainersConfiguration.class)
-public class ReservationRepositoryTest {
+class ReservationRepositoryTest {
 
     @Autowired
     private MemberRepository memberRepository;
@@ -36,26 +35,11 @@ public class ReservationRepositoryTest {
     private EntityManager entityManager;
 
     @Test
-    void 예약을_저장하면_회원과_세션의_연관관계가_함께_조회된다(){
-        Member member = Member.create("abc@naver.com", "1234");
+    void 예약을_저장하면_회원과_세션의_연관관계가_함께_조회된다() {
+        Member member = createMember("reservation-repository@example.com");
         memberRepository.save(member);
-        LocalDateTime startAt = LocalDateTime.of(2026, 7, 20, 19, 0);
-        LocalDateTime endAt = LocalDateTime.of(2026, 7, 20, 21, 0);
-        LocalDateTime reservationOpenAt =
-                LocalDateTime.of(2026, 7, 10, 9, 0);
-        LocalDateTime reservationCloseAt =
-                LocalDateTime.of(2026, 7, 20, 18, 0);
 
-        ClimbingSession climbingSession = ClimbingSession.create(
-                "평일 저녁 초보 세션",
-                "광주 온클라이밍",
-                startAt,
-                endAt,
-                reservationOpenAt,
-                reservationCloseAt,
-                2,
-                ClimbingSessionLevel.BEGINNER
-        );
+        ClimbingSession climbingSession = createSession(2);
         climbingSessionRepository.save(climbingSession);
 
         Reservation reservation = Reservation.create(
@@ -85,28 +69,12 @@ public class ReservationRepositoryTest {
     }
 
     @Test
-    void 확정된_예약이_존재하면_중복_예약_조회가_true를_반환한다(){
-        Member member = Member.create("abc@naver.com", "1234");
+    void 확정된_예약이_존재하면_중복_예약_조회가_true를_반환한다() {
+        Member member = createMember("duplicate-reservation@example.com");
         memberRepository.save(member);
         Long memberId = member.getId();
 
-        LocalDateTime startAt = LocalDateTime.of(2026, 7, 20, 19, 0);
-        LocalDateTime endAt = LocalDateTime.of(2026, 7, 20, 21, 0);
-        LocalDateTime reservationOpenAt =
-                LocalDateTime.of(2026, 7, 10, 9, 0);
-        LocalDateTime reservationCloseAt =
-                LocalDateTime.of(2026, 7, 20, 18, 0);
-
-        ClimbingSession climbingSession = ClimbingSession.create(
-                "평일 저녁 초보 세션",
-                "광주 온클라이밍",
-                startAt,
-                endAt,
-                reservationOpenAt,
-                reservationCloseAt,
-                2,
-                ClimbingSessionLevel.BEGINNER
-        );
+        ClimbingSession climbingSession = createSession(2);
         climbingSessionRepository.save(climbingSession);
         Long sessionId = climbingSession.getId();
 

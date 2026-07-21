@@ -9,7 +9,6 @@ import com.nhnacademy.cruxmate.reservation.domain.Reservation;
 import com.nhnacademy.cruxmate.reservation.domain.ReservationStatus;
 import com.nhnacademy.cruxmate.reservation.repository.ReservationRepository;
 import com.nhnacademy.cruxmate.session.domain.ClimbingSession;
-import com.nhnacademy.cruxmate.session.domain.ClimbingSessionLevel;
 import com.nhnacademy.cruxmate.session.repository.ClimbingSessionRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -20,11 +19,13 @@ import org.springframework.context.annotation.Import;
 
 import java.time.LocalDateTime;
 
+import static com.nhnacademy.cruxmate.support.TestFixtures.createMember;
+import static com.nhnacademy.cruxmate.support.TestFixtures.createSession;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
 @Import({TestcontainersConfiguration.class, ReservationService.class})
-public class ReservationServiceTest {
+class ReservationServiceTest {
 
     @Autowired
     private ReservationService reservationService;
@@ -43,24 +44,16 @@ public class ReservationServiceTest {
 
     @Test
     void 예약을_생성하면_예약이_저장되고_세션_예약인원이_증가한다() {
-        Member member = Member.create("fbxogns321@naver.com", "1234");
+        Member member = createMember("reservation-create@example.com");
         memberRepository.save(member);
 
         LocalDateTime now = LocalDateTime.now();
-        LocalDateTime reservationOpenAt = now.minusDays(1);
-        LocalDateTime reservationCloseAt = now.plusDays(1);
-        LocalDateTime startAt = now.plusDays(2);
-        LocalDateTime endAt = now.plusDays(2).plusHours(2);
-
-        ClimbingSession session = ClimbingSession.create(
-                "평일 저녁 초보 세션",
-                "광주 온클라이밍",
-                startAt,
-                endAt,
-                reservationOpenAt,
-                reservationCloseAt,
-                5,
-                ClimbingSessionLevel.BEGINNER
+        ClimbingSession session = createSession(
+                now.plusDays(2),
+                now.plusDays(2).plusHours(2),
+                now.minusDays(1),
+                now.plusDays(1),
+                5
         );
         climbingSessionRepository.save(session);
 
@@ -86,21 +79,18 @@ public class ReservationServiceTest {
     }
 
     @Test
-    void 예약을_취소하면_상태가_변경되고_세션_예약인원이_감소한다(){
-        Member member = Member.create("fbxogns321@naver.com", "1234");
+    void 예약을_취소하면_상태가_변경되고_세션_예약인원이_감소한다() {
+        Member member = createMember("reservation-cancel@example.com");
         memberRepository.save(member);
 
         LocalDateTime now = LocalDateTime.now();
 
-        ClimbingSession session = ClimbingSession.create(
-                "평일 저녁 초보 세션",
-                "광주 온클라이밍",
+        ClimbingSession session = createSession(
                 now.plusDays(2),
                 now.plusDays(2).plusHours(2),
                 now.minusDays(1),
                 now.plusDays(1),
-                5,
-                ClimbingSessionLevel.BEGINNER
+                5
         );
         climbingSessionRepository.save(session);
 

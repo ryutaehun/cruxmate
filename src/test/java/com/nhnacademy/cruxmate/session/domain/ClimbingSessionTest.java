@@ -2,23 +2,17 @@ package com.nhnacademy.cruxmate.session.domain;
 
 import org.junit.jupiter.api.Test;
 
-import java.time.LocalDateTime;
-
+import static com.nhnacademy.cruxmate.support.TestFixtures.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class ClimbingSessionTest {
 
-    private static final LocalDateTime START_AT = LocalDateTime.of(2026, 7, 20, 19, 0);
-    private static final LocalDateTime END_AT = LocalDateTime.of(2026, 7, 20, 21, 0);
-    private static final LocalDateTime RESERVATION_OPEN_AT = LocalDateTime.of(2026, 7, 10, 9, 0);
-    private static final LocalDateTime RESERVATION_CLOSE_AT = LocalDateTime.of(2026, 7, 20, 18, 0);
-
     @Test
     void 정상적인_정보로_세션을_생성한다() {
         ClimbingSession session = createSession(10);
 
-        assertThat(session.getTitle()).isEqualTo("평일 저녁 초보 세션");
+        assertThat(session.getTitle()).isEqualTo(DEFAULT_SESSION_TITLE);
         assertThat(session.getCapacity()).isEqualTo(10);
         assertThat(session.getReservedCount()).isZero();
         assertThat(session.getStatus())
@@ -35,17 +29,17 @@ class ClimbingSessionTest {
     @Test
     void 예약_마감이_세션_시작보다_늦으면_생성할_수_없다() {
         assertThatThrownBy(() -> createSession(
-                START_AT,
-                END_AT,
+                SESSION_START_AT,
+                SESSION_END_AT,
                 RESERVATION_OPEN_AT,
-                LocalDateTime.of(2026, 7, 20, 20, 0),
+                SESSION_START_AT.plusHours(1),
                 10
         ))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    void reserve_정상() {
+    void 예약_인원을_추가하면_reservedCount가_증가한다() {
         ClimbingSession session = createSession(4);
 
         session.reserve(3, RESERVATION_OPEN_AT);
@@ -54,7 +48,7 @@ class ClimbingSessionTest {
     }
 
     @Test
-    void reserve_예약시작전이면_실패() {
+    void 예약_시작_전이면_예약할_수_없다() {
         ClimbingSession session = createSession(4);
 
         assertThatThrownBy(() -> session.reserve(
@@ -66,7 +60,7 @@ class ClimbingSessionTest {
     }
 
     @Test
-    void reserve_시작_마감_경계테스트() {
+    void 예약_시작_시각에는_가능하고_마감_시각에는_불가능하다() {
         ClimbingSession session = createSession(4);
 
         session.reserve(2, RESERVATION_OPEN_AT);
@@ -78,7 +72,7 @@ class ClimbingSessionTest {
     }
 
     @Test
-    void reserve_참여인원이_1명미만이면_실패() {
+    void 참여인원이_1명_미만이면_예약할_수_없다() {
         ClimbingSession session = createSession(4);
 
         assertThatThrownBy(() -> session.reserve(
@@ -90,7 +84,7 @@ class ClimbingSessionTest {
     }
 
     @Test
-    void reserve_참여인원이_4명초과면_실패() {
+    void 참여인원이_4명_초과이면_예약할_수_없다() {
         ClimbingSession session = createSession(5);
 
         assertThatThrownBy(() -> session.reserve(
@@ -102,7 +96,7 @@ class ClimbingSessionTest {
     }
 
     @Test
-    void reserve_잔여정원을_초과하면_실패() {
+    void 잔여_정원을_초과하면_예약할_수_없다() {
         ClimbingSession session = createSession(4);
 
         session.reserve(3, RESERVATION_OPEN_AT.plusHours(1));
@@ -151,32 +145,4 @@ class ClimbingSessionTest {
         assertThat(session.getReservedCount()).isEqualTo(2);
     }
 
-    private ClimbingSession createSession(int capacity) {
-        return createSession(
-                START_AT,
-                END_AT,
-                RESERVATION_OPEN_AT,
-                RESERVATION_CLOSE_AT,
-                capacity
-        );
-    }
-
-    private ClimbingSession createSession(
-            LocalDateTime startAt,
-            LocalDateTime endAt,
-            LocalDateTime reservationOpenAt,
-            LocalDateTime reservationCloseAt,
-            int capacity
-    ) {
-        return ClimbingSession.create(
-                "평일 저녁 초보 세션",
-                "광주 온클라이밍",
-                startAt,
-                endAt,
-                reservationOpenAt,
-                reservationCloseAt,
-                capacity,
-                ClimbingSessionLevel.BEGINNER
-        );
-    }
 }

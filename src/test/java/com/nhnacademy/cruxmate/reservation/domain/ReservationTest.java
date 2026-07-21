@@ -2,18 +2,19 @@ package com.nhnacademy.cruxmate.reservation.domain;
 
 import com.nhnacademy.cruxmate.member.domain.Member;
 import com.nhnacademy.cruxmate.session.domain.ClimbingSession;
-import com.nhnacademy.cruxmate.session.domain.ClimbingSessionLevel;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
 
+import static com.nhnacademy.cruxmate.support.TestFixtures.createMember;
+import static com.nhnacademy.cruxmate.support.TestFixtures.createSession;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-public class ReservationTest {
+class ReservationTest {
 
     @Test
-    void 정상_생성() {
+    void 예약을_생성하면_CONFIRMED_상태가_된다() {
         Member member = createMember();
         ClimbingSession session = createSession();
 
@@ -28,7 +29,7 @@ public class ReservationTest {
     }
 
     @Test
-    void participantCount가_0이면_실패() {
+    void 참여인원이_0명이면_예약을_생성할_수_없다() {
         assertThatThrownBy(() -> Reservation.create(
                 createMember(), createSession(), 0
         ))
@@ -37,7 +38,7 @@ public class ReservationTest {
     }
 
     @Test
-    void participantCount가_5이면_실패() {
+    void 참여인원이_5명이면_예약을_생성할_수_없다() {
         assertThatThrownBy(() -> Reservation.create(
                 createMember(), createSession(), 5
         ))
@@ -46,7 +47,7 @@ public class ReservationTest {
     }
 
     @Test
-    void member가_null이면_실패() {
+    void 회원이_null이면_예약을_생성할_수_없다() {
         assertThatThrownBy(() -> Reservation.create(
                 null, createSession(), 1
         ))
@@ -55,7 +56,7 @@ public class ReservationTest {
     }
 
     @Test
-    void session이_null이면_실패() {
+    void 세션이_null이면_예약을_생성할_수_없다() {
         assertThatThrownBy(() -> Reservation.create(
                 createMember(), null, 1
         ))
@@ -90,20 +91,4 @@ public class ReservationTest {
                 .hasMessage("이미 취소된 예약입니다.");
     }
 
-    private Member createMember() {
-        return Member.create("1234@gmail.com", "1234");
-    }
-
-    private ClimbingSession createSession() {
-        return ClimbingSession.create(
-                "평일 저녁 초보 세션",
-                "광주 온클라이밍",
-                LocalDateTime.of(2026, 7, 20, 19, 0),
-                LocalDateTime.of(2026, 7, 20, 21, 0),
-                LocalDateTime.of(2026, 7, 10, 9, 0),
-                LocalDateTime.of(2026, 7, 20, 18, 0),
-                4,
-                ClimbingSessionLevel.BEGINNER
-        );
-    }
 }
