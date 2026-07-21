@@ -2,6 +2,7 @@ package com.nhnacademy.cruxmate.session.controller;
 
 import com.nhnacademy.cruxmate.session.dto.ClimbingSessionCreateRequest;
 import com.nhnacademy.cruxmate.session.dto.ClimbingSessionCreateResponse;
+import com.nhnacademy.cruxmate.session.dto.ClimbingSessionResponse;
 import com.nhnacademy.cruxmate.session.service.ClimbingSessionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -31,5 +32,10 @@ public class ClimbingSessionController {
         );
 
         return new ClimbingSessionCreateResponse(sessionId);
+    }
+
+    @GetMapping("/{sessionId}")
+    public ClimbingSessionResponse getSession(@PathVariable Long sessionId){
+        return climbingSessionService.getSession(sessionId);
     }
 }

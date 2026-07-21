@@ -1,8 +1,12 @@
 package com.nhnacademy.cruxmate.session.service;
 
 import com.nhnacademy.cruxmate.TestcontainersConfiguration;
+import com.nhnacademy.cruxmate.common.exception.BusinessException;
+import com.nhnacademy.cruxmate.common.exception.ErrorCode;
 import com.nhnacademy.cruxmate.session.domain.ClimbingSession;
 import com.nhnacademy.cruxmate.session.domain.ClimbingSessionLevel;
+import com.nhnacademy.cruxmate.session.domain.ClimbingSessionStatus;
+import com.nhnacademy.cruxmate.session.dto.ClimbingSessionResponse;
 import com.nhnacademy.cruxmate.session.repository.ClimbingSessionRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -14,6 +18,7 @@ import org.springframework.context.annotation.Import;
 import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DataJpaTest
 @Import({
@@ -61,5 +66,50 @@ class ClimbingSessionServiceTest {
         assertThat(session.getLevel()).isEqualTo(ClimbingSessionLevel.BEGINNER);
         assertThat(session.getCreatedAt()).isNotNull();
         assertThat(session.getUpdatedAt()).isNotNull();
+    }
+
+    @Test
+    void 세션을_조회하면_응답_DTO를_반환한다() {
+        LocalDateTime now = LocalDateTime.now();
+
+        Long sessionId = climbingSessionService.createSession(
+                "평일 저녁 초보 세션",
+                "광주 온클라이밍",
+                now.plusDays(2),
+                now.plusDays(2).plusHours(2),
+                now.minusHours(1),
+                now.plusDays(1),
+                5,
+                ClimbingSessionLevel.BEGINNER
+        );
+
+        entityManager.flush();
+        entityManager.clear();
+
+        ClimbingSessionResponse response =
+                climbingSessionService.getSession(sessionId);
+
+        assertThat(response.sessionId()).isEqualTo(sessionId);
+        assertThat(response.title()).isEqualTo("평일 저녁 초보 세션");
+        assertThat(response.location()).isEqualTo("광주 온클라이밍");
+        assertThat(response.capacity()).isEqualTo(5);
+        assertThat(response.reservedCount()).isZero();
+        assertThat(response.remainingCapacity()).isEqualTo(5);
+        assertThat(response.level()).isEqualTo(ClimbingSessionLevel.BEGINNER);
+        assertThat(response.status()).isEqualTo(ClimbingSessionStatus.SCHEDULED);
+    }
+
+    @Test
+    void 존재하지_않는_세션을_조회하면_CLIMBING_SESSION_NOT_FOUND를_던진다() {
+        Long nonexistentSessionId = 0L;
+
+        assertThatThrownBy(() ->
+                climbingSessionService.getSession(nonexistentSessionId)
+        )
+                .isInstanceOfSatisfying(
+                        BusinessException.class,
+                        exception -> assertThat(exception.getErrorCode())
+                                .isEqualTo(ErrorCode.CLIMBING_SESSION_NOT_FOUND)
+                );
     }
 }
