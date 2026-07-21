@@ -148,4 +148,60 @@ class ReservationIdempotencyServiceTest {
 
         assertThat(reservationRepository.count()).isZero();
     }
+
+    @Test
+    void 동일한_키와_동일한_요청을_다시_보내면_기존_예약_ID를_반환한다() {
+        Member member =
+                createMember("idempotency-retry-integration@example.com");
+        memberRepository.save(member);
+
+        LocalDateTime now = LocalDateTime.now();
+
+        ClimbingSession session = createSession(
+                now.plusDays(2),
+                now.plusDays(2).plusHours(2),
+                now.minusDays(1),
+                now.plusDays(1),
+                5
+        );
+        climbingSessionRepository.save(session);
+
+        String idempotencyKey = "retry-key-123";
+        String requestHash = "a".repeat(64);
+
+        Long firstReservationId = idempotencyService.createReservation(
+                member.getId(),
+                session.getId(),
+                2,
+                idempotencyKey,
+                requestHash
+        );
+
+        Long secondReservationId = idempotencyService.createReservation(
+                member.getId(),
+                session.getId(),
+                2,
+                idempotencyKey,
+                requestHash
+        );
+
+        entityManager.flush();
+        entityManager.clear();
+
+        assertThat(secondReservationId).isEqualTo(firstReservationId);
+        assertThat(reservationRepository.count()).isEqualTo(1);
+
+        ReservationIdempotency idempotency =
+                idempotencyRepository
+                        .findByMemberIdAndIdempotencyKey(
+                                member.getId(),
+                                idempotencyKey
+                        )
+                        .orElseThrow();
+
+        assertThat(idempotency.getReservation().getId())
+                .isEqualTo(firstReservationId);
+        assertThat(idempotency.getStatus())
+                .isEqualTo(IdempotencyStatus.COMPLETED);
+    }
 }
