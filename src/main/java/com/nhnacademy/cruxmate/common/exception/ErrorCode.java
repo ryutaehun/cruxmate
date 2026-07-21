@@ -7,6 +7,8 @@ import org.springframework.http.HttpStatus;
 @Getter
 @RequiredArgsConstructor
 public enum ErrorCode {
+    INVALID_INPUT(HttpStatus.BAD_REQUEST, "COM001", "요청 값이 올바르지 않습니다."),
+
     MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "MEM001", "회원을 찾을 수 없습니다."),
     CLIMBING_SESSION_NOT_FOUND(HttpStatus.NOT_FOUND, "SES001", "클라이밍 세션을 찾을 수 없습니다."),
     DUPLICATE_RESERVATION(HttpStatus.CONFLICT, "RES001", "이미 해당 세션을 예약했습니다."),

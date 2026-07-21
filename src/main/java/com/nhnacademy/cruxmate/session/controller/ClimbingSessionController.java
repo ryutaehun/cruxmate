@@ -4,6 +4,7 @@ import com.nhnacademy.cruxmate.session.dto.ClimbingSessionCreateRequest;
 import com.nhnacademy.cruxmate.session.dto.ClimbingSessionCreateResponse;
 import com.nhnacademy.cruxmate.session.dto.ClimbingSessionResponse;
 import com.nhnacademy.cruxmate.session.service.ClimbingSessionService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -18,7 +19,7 @@ public class ClimbingSessionController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ClimbingSessionCreateResponse createSession(
-            @RequestBody ClimbingSessionCreateRequest request
+            @Valid @RequestBody ClimbingSessionCreateRequest request
     ) {
         Long sessionId = climbingSessionService.createSession(
                 request.title(),
