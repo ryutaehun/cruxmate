@@ -5,6 +5,7 @@ import com.nhnacademy.cruxmate.common.exception.BusinessException;
 import com.nhnacademy.cruxmate.common.exception.ErrorCode;
 import com.nhnacademy.cruxmate.idempotency.domain.IdempotencyStatus;
 import com.nhnacademy.cruxmate.idempotency.domain.ReservationIdempotency;
+import com.nhnacademy.cruxmate.idempotency.facade.ReservationIdempotencyFacade;
 import com.nhnacademy.cruxmate.idempotency.repository.ReservationIdempotencyRepository;
 import com.nhnacademy.cruxmate.member.domain.Member;
 import com.nhnacademy.cruxmate.member.repository.MemberRepository;
@@ -33,12 +34,13 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 @Import({
         TestcontainersConfiguration.class,
         ReservationService.class,
-        ReservationIdempotencyService.class
+        ReservationIdempotencyService.class,
+        ReservationIdempotencyFacade.class
 })
 class ReservationIdempotencyServiceTest {
 
     @Autowired
-    private ReservationIdempotencyService idempotencyService;
+    private ReservationIdempotencyFacade idempotencyFacade;
 
     @Autowired
     private ReservationIdempotencyRepository idempotencyRepository;
@@ -75,7 +77,7 @@ class ReservationIdempotencyServiceTest {
         );
         climbingSessionRepository.save(session);
 
-        Long reservationId = idempotencyService.createReservation(
+        Long reservationId = idempotencyFacade.createReservation(
                 member.getId(),
                 session.getId(),
                 2,
@@ -131,7 +133,7 @@ class ReservationIdempotencyServiceTest {
         String idempotencyKey = "rollback-key-123";
 
         assertThatThrownBy(() ->
-                idempotencyService.createReservation(
+                idempotencyFacade.createReservation(
                         member.getId(),
                         nonexistentSessionId,
                         2,
@@ -170,7 +172,7 @@ class ReservationIdempotencyServiceTest {
         String idempotencyKey = "retry-key-123";
         String requestHash = "a".repeat(64);
 
-        Long firstReservationId = idempotencyService.createReservation(
+        Long firstReservationId = idempotencyFacade.createReservation(
                 member.getId(),
                 session.getId(),
                 2,
@@ -178,7 +180,7 @@ class ReservationIdempotencyServiceTest {
                 requestHash
         );
 
-        Long secondReservationId = idempotencyService.createReservation(
+        Long secondReservationId = idempotencyFacade.createReservation(
                 member.getId(),
                 session.getId(),
                 2,
@@ -224,7 +226,7 @@ class ReservationIdempotencyServiceTest {
         idempotencyRepository.saveAndFlush(processing);
 
         assertThatThrownBy(() ->
-                idempotencyService.createReservation(
+                idempotencyFacade.createReservation(
                         member.getId(),
                         10L,
                         2,

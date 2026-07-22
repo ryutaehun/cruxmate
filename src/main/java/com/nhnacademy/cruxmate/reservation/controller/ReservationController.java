@@ -1,6 +1,6 @@
 package com.nhnacademy.cruxmate.reservation.controller;
 
-import com.nhnacademy.cruxmate.idempotency.service.ReservationIdempotencyService;
+import com.nhnacademy.cruxmate.idempotency.facade.ReservationIdempotencyFacade;
 import com.nhnacademy.cruxmate.idempotency.support.ReservationRequestHashGenerator;
 import com.nhnacademy.cruxmate.reservation.dto.ReservationCreateRequest;
 import com.nhnacademy.cruxmate.reservation.dto.ReservationCreateResponse;
@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/reservations")
 public class ReservationController {
 
-    private final ReservationIdempotencyService idempotencyService;
+    private final ReservationIdempotencyFacade reservationIdempotencyFacade;
     private final ReservationRequestHashGenerator requestHashGenerator;
 
     @PostMapping
@@ -24,7 +24,13 @@ public class ReservationController {
                                                        @Valid @RequestBody ReservationCreateRequest request){
         String requestHash = requestHashGenerator.generate(memberId, request.sessionId(), request.participantCount());
 
-        Long reservationId = idempotencyService.createReservation(memberId, request.sessionId(), request.participantCount(), idempotencyKey, requestHash);
+        Long reservationId = reservationIdempotencyFacade.createReservation(
+                        memberId,
+                        request.sessionId(),
+                        request.participantCount(),
+                        idempotencyKey,
+                        requestHash
+                );
 
         return new ReservationCreateResponse(reservationId);
     }
