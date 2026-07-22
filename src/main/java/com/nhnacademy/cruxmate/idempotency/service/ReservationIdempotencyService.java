@@ -12,6 +12,7 @@ import com.nhnacademy.cruxmate.reservation.repository.ReservationRepository;
 import com.nhnacademy.cruxmate.reservation.service.ReservationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -38,22 +39,11 @@ public class ReservationIdempotencyService {
                 memberId, idempotencyKey
         );
 
-        if(existing.isPresent()){
-            ReservationIdempotency idempotency = existing.get();
-
-            if (!idempotency.getRequestHash().equals(requestHash)) {
-                throw new BusinessException(
-                        ErrorCode.IDEMPOTENCY_KEY_CONFLICT
-                );
-            }
-
-            if (idempotency.getStatus() == IdempotencyStatus.COMPLETED) {
-                return idempotency.getReservation().getId();
-            }
-
-            if (idempotency.getStatus() == IdempotencyStatus.PROCESSING){
-                throw new BusinessException(ErrorCode.IDEMPOTENCY_REQUEST_PROCESSING);
-            }
+        if (existing.isPresent()) {
+            return resolveExisting(
+                    existing.get(),
+                    requestHash
+            );
         }
 
         Member member = memberRepository.findById(memberId)
@@ -79,5 +69,53 @@ public class ReservationIdempotencyService {
         idempotency.complete(reservation, LocalDateTime.now());
 
         return reservationId;
+    }
+
+    @Transactional(
+            readOnly = true,
+            propagation = Propagation.REQUIRES_NEW
+    )
+    public Long getExistingReservationResult(
+            Long memberId,
+            String idempotencyKey,
+            String requestHash
+    ) {
+        ReservationIdempotency idempotency =
+                idempotencyRepository
+                        .findByMemberIdAndIdempotencyKey(
+                                memberId,
+                                idempotencyKey
+                        )
+                        .orElseThrow(() ->
+                                new IllegalStateException(
+                                        "멱등성 키 충돌 후 기존 요청을 찾을 수 없습니다."
+                                )
+                        );
+
+        return resolveExisting(
+                idempotency,
+                requestHash
+        );
+    }
+
+    private Long resolveExisting(
+            ReservationIdempotency idempotency,
+            String requestHash
+    ) {
+        if (!idempotency.getRequestHash().equals(requestHash)) {
+            throw new BusinessException(
+                    ErrorCode.IDEMPOTENCY_KEY_CONFLICT
+            );
+        }
+
+        if (idempotency.getStatus()
+                == IdempotencyStatus.COMPLETED) {
+
+            return idempotency.getReservation().getId();
+        }
+
+        throw new BusinessException(
+                ErrorCode.IDEMPOTENCY_REQUEST_PROCESSING
+        );
     }
 }
