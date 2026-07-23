@@ -12,6 +12,7 @@ import com.nhnacademy.cruxmate.reservation.repository.ReservationRepository;
 import com.nhnacademy.cruxmate.reservation.service.ReservationService;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
@@ -19,7 +20,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Optional;
 
 import static com.nhnacademy.cruxmate.support.TestFixtures.createMember;
@@ -42,8 +46,17 @@ public class ReservationIdempotencyServiceUnitTest {
     @Mock
     private ReservationService reservationService;
 
+    @Mock
+    private Clock clock;
+
     @InjectMocks
     private ReservationIdempotencyService reservationIdempotencyService;
+
+    @BeforeEach
+    void setUpClock() {
+        lenient().when(clock.instant()).thenReturn(Instant.parse("2026-07-15T10:00:00Z"));
+        lenient().when(clock.getZone()).thenReturn(ZoneOffset.UTC);
+    }
 
     @Test
     void 새로운_멱등성_키로_예약을_생성하고_완료_상태로_변경한다(){

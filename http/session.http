@@ -29,3 +29,6 @@ Content-Type: application/json
 
 ### 세션 조회
 GET {{baseUrl}}/api/sessions/{{sessionId}}
+
+### 세선 목록 조회
+GET {{baseUrl}}/api/sessions?page=0&size=20

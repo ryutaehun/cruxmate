@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 
 @Service
@@ -22,6 +23,7 @@ public class ReservationService {
     private final ReservationRepository reservationRepository;
     private final MemberRepository memberRepository;
     private final ClimbingSessionRepository climbingSessionRepository;
+    private final Clock clock;
 
     @Transactional
     public Long createReservation(
@@ -45,7 +47,7 @@ public class ReservationService {
             throw new BusinessException(ErrorCode.DUPLICATE_RESERVATION);
         }
 
-        climbingSession.reserve(participantCount, LocalDateTime.now());
+        climbingSession.reserve(participantCount, LocalDateTime.now(clock));
 
         Reservation reservation = Reservation.create(member, climbingSession, participantCount);
 
@@ -63,7 +65,7 @@ public class ReservationService {
         Reservation reservation = reservationRepository.findByIdAndMemberIdForUpdate(reservationId, memberId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESERVATION_NOT_FOUND));
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(clock);
 
         reservation.cancel(now);
         session.release(reservation.getParticipantCount());
