@@ -1,6 +1,7 @@
 package com.nhnacademy.cruxmate.idempotency.service;
 
 import com.nhnacademy.cruxmate.TestcontainersConfiguration;
+import com.nhnacademy.cruxmate.common.config.TimeConfig;
 import com.nhnacademy.cruxmate.common.exception.BusinessException;
 import com.nhnacademy.cruxmate.common.exception.ErrorCode;
 import com.nhnacademy.cruxmate.idempotency.domain.IdempotencyStatus;
@@ -33,6 +34,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 @DataJpaTest
 @Import({
         TestcontainersConfiguration.class,
+        TimeConfig.class,
         ReservationService.class,
         ReservationIdempotencyService.class,
         ReservationIdempotencyFacade.class

@@ -66,6 +66,23 @@ public final class TestFixtures {
         );
     }
 
+    public static ClimbingSession createSession(
+            String title,
+            LocalDateTime startAt,
+            LocalDateTime endAt
+    ) {
+        return ClimbingSession.create(
+                title,
+                DEFAULT_SESSION_LOCATION,
+                startAt,
+                endAt,
+                startAt.minusDays(2),
+                startAt.minusHours(1),
+                4,
+                ClimbingSessionLevel.BEGINNER
+        );
+    }
+
     public static Reservation createReservation(Member member) {
         return Reservation.create(
                 member,

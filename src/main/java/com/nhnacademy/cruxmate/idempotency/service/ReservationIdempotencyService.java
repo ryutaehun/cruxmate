@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -26,6 +27,7 @@ public class ReservationIdempotencyService {
     private final MemberRepository memberRepository;
     private final ReservationRepository reservationRepository;
     private final ReservationService reservationService;
+    private final Clock clock;
 
     @Transactional
     public Long createReservation(
@@ -66,7 +68,7 @@ public class ReservationIdempotencyService {
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESERVATION_NOT_FOUND));
 
-        idempotency.complete(reservation, LocalDateTime.now());
+        idempotency.complete(reservation, LocalDateTime.now(clock));
 
         return reservationId;
     }

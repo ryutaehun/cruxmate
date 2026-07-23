@@ -1,6 +1,7 @@
 package com.nhnacademy.cruxmate.reservation.service;
 
 import com.nhnacademy.cruxmate.TestcontainersConfiguration;
+import com.nhnacademy.cruxmate.common.config.TimeConfig;
 import com.nhnacademy.cruxmate.common.exception.BusinessException;
 import com.nhnacademy.cruxmate.common.exception.ErrorCode;
 import com.nhnacademy.cruxmate.member.domain.Member;
@@ -24,7 +25,7 @@ import static com.nhnacademy.cruxmate.support.TestFixtures.createSession;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
-@Import({TestcontainersConfiguration.class, ReservationService.class})
+@Import({TestcontainersConfiguration.class, TimeConfig.class, ReservationService.class})
 class ReservationServiceTest {
 
     @Autowired

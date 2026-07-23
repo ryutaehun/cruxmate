@@ -10,13 +10,17 @@ import com.nhnacademy.cruxmate.reservation.repository.ReservationRepository;
 import com.nhnacademy.cruxmate.session.domain.ClimbingSession;
 import com.nhnacademy.cruxmate.session.repository.ClimbingSessionRepository;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Optional;
 
 import static com.nhnacademy.cruxmate.support.TestFixtures.createMember;
@@ -37,8 +41,17 @@ class ReservationServiceUnitTest {
     @Mock
     private ClimbingSessionRepository climbingSessionRepository;
 
+    @Mock
+    private Clock clock;
+
     @InjectMocks
     private ReservationService reservationService;
+
+    @BeforeEach
+    void setUpClock() {
+        lenient().when(clock.instant()).thenReturn(Instant.parse("2026-07-15T10:00:00Z"));
+        lenient().when(clock.getZone()).thenReturn(ZoneOffset.UTC);
+    }
 
     @Test
     void 회원이_없으면_MEMBER_NOT_FOUND를_던진다() {
