@@ -18,3 +18,9 @@ spring:
   flyway:
     enabled: true
     locations: classpath:db/migration
+
+
+jwt:
+  issuer: https://cruxmate.local
+  secret: ${JWT_SECRET}
+  access-token-expiration: 1h
