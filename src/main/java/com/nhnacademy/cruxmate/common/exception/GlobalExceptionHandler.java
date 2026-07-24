@@ -1,6 +1,7 @@
 package com.nhnacademy.cruxmate.common.exception;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -47,5 +48,15 @@ public class GlobalExceptionHandler {
         ErrorResponse response = ErrorResponse.of(errorCode.getCode(), errorCode.getMessage());
 
         return ResponseEntity.status(errorCode.getStatus()).body(response);
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ErrorResponse> handleAuthenticationException(
+            AuthenticationException exception
+    ){
+        ErrorCode errorCode = ErrorCode.LOGIN_FAILED;
+
+        return ResponseEntity.status(errorCode.getStatus())
+                .body(ErrorResponse.of(errorCode.getCode(), errorCode.getMessage()));
     }
 }
