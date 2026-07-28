@@ -3,6 +3,9 @@ package com.nhnacademy.cruxmate.reservation.repository;
 import com.nhnacademy.cruxmate.reservation.domain.Reservation;
 import com.nhnacademy.cruxmate.reservation.domain.ReservationStatus;
 import jakarta.persistence.LockModeType;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
@@ -37,4 +40,7 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     boolean existsByMember_IdAndSession_IdAndStatus(Long memberId, Long sessionId, ReservationStatus status);
 
     long countBySession_Id(Long sessionId);
+
+    @EntityGraph(attributePaths = "session")
+    Page<Reservation> findAllByMember_Id(Long memberId, Pageable pageable);
 }

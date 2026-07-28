@@ -1,15 +1,20 @@
 package com.nhnacademy.cruxmate.reservation.service;
 
+import com.nhnacademy.cruxmate.common.dto.PageResponse;
 import com.nhnacademy.cruxmate.common.exception.BusinessException;
 import com.nhnacademy.cruxmate.common.exception.ErrorCode;
 import com.nhnacademy.cruxmate.member.domain.Member;
 import com.nhnacademy.cruxmate.member.repository.MemberRepository;
 import com.nhnacademy.cruxmate.reservation.domain.Reservation;
 import com.nhnacademy.cruxmate.reservation.domain.ReservationStatus;
+import com.nhnacademy.cruxmate.reservation.dto.ReservationResponse;
 import com.nhnacademy.cruxmate.reservation.repository.ReservationRepository;
 import com.nhnacademy.cruxmate.session.domain.ClimbingSession;
 import com.nhnacademy.cruxmate.session.repository.ClimbingSessionRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -71,5 +76,24 @@ public class ReservationService {
         session.release(reservation.getParticipantCount());
 
         return reservationId;
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<ReservationResponse> getMyReservations(Long memberId, int page, int size){
+        if(page < 0){
+            throw new IllegalArgumentException("페이지 번호는 0 이상이어야 합니다.");
+        }
+
+        if(size < 1 || size > 100){
+            throw new IllegalArgumentException("페이지 크기는 1 이상 100 이하여야 합니다.");
+        }
+
+        PageRequest pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+
+        Page<ReservationResponse> result = reservationRepository
+                .findAllByMember_Id(memberId, pageable).map(ReservationResponse::from);
+
+        return PageResponse.from(result);
+
     }
 }
