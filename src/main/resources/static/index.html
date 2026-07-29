@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CruxMate</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<main class="centered-page">
+    <section class="panel loading-panel" aria-live="polite">
+        <p class="eyebrow">CRUXMATE</p>
+        <h1>클라이밍 세션 예약</h1>
+        <p class="muted">화면을 준비하고 있습니다.</p>
+    </section>
+</main>
+<script>
+    const destination = sessionStorage.getItem("cruxmate.accessToken")
+        ? "/sessions.html"
+        : "/login.html";
+    window.location.replace(destination);
+</script>
+</body>
+</html>

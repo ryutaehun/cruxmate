@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>세션 | CruxMate</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<header class="site-header">
+    <a class="brand" href="/sessions.html">CRUXMATE</a>
+    <nav class="site-nav" aria-label="주요 메뉴">
+        <a class="active" href="/sessions.html">세션</a>
+        <a href="/reservations.html">내 예약</a>
+        <button class="link-button" data-logout type="button">로그아웃</button>
+    </nav>
+</header>
+
+<main class="content">
+    <section class="page-heading">
+        <div>
+            <p class="eyebrow">UPCOMING SESSIONS</p>
+            <h1>클라이밍 세션</h1>
+            <p class="muted">참여 인원을 선택하고 예약하세요.</p>
+        </div>
+        <a class="button button-secondary" href="/reservations.html">내 예약 보기</a>
+    </section>
+
+    <p id="page-message" class="message" role="status" hidden></p>
+    <section id="session-list" class="card-grid" aria-live="polite"></section>
+    <p id="empty-state" class="empty-state" hidden>예정된 세션이 없습니다.</p>
+
+    <nav class="pagination" aria-label="세션 페이지 이동">
+        <button id="previous-page" class="button button-secondary" type="button">이전</button>
+        <span id="page-info">-</span>
+        <button id="next-page" class="button button-secondary" type="button">다음</button>
+    </nav>
+</main>
+<script type="module" src="/js/sessions.js"></script>
+</body>
+</html>
