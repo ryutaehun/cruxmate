@@ -32,4 +32,6 @@ jobs:
         run: chmod +x mvnw
 
       - name: Run tests
+        env:
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
         run: ./mvnw --batch-mode --no-transfer-progress clean test
