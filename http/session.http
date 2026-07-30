@@ -1,24 +1,35 @@
 @baseUrl = http://localhost:8080
-@memberId = 1
+@adminAccessToken = replace-with-admin-access-token
 @sessionId = 1
 
 ### 세션 생성
+# 예약 시작은 현재보다 1분 전, 예약 마감은 2일 후, 세션은 3일 후로 자동 설정됩니다.
+< {%
+    const now = Date.now();
+    const toLocalDateTime = (value) => new Date(value).toISOString().slice(0, 19);
+    request.variables.set("reservationOpenAt", toLocalDateTime(now - 60 * 1000));
+    request.variables.set("reservationCloseAt", toLocalDateTime(now + 2 * 24 * 60 * 60 * 1000));
+    request.variables.set("startAt", toLocalDateTime(now + 3 * 24 * 60 * 60 * 1000));
+    request.variables.set("endAt", toLocalDateTime(now + 3 * 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000));
+%}
 POST {{baseUrl}}/api/sessions
+Authorization: Bearer {{adminAccessToken}}
 Content-Type: application/json
 
 {
   "title": "평일 저녁 중급 세션",
   "location": "광주 그랩잇",
-  "startAt": "2026-08-02T19:00:00",
-  "endAt": "2026-08-02T21:00:00",
-  "reservationOpenAt": "2026-07-30T09:00:00",
-  "reservationCloseAt": "2026-08-02T18:00:00",
+  "startAt": "{{startAt}}",
+  "endAt": "{{endAt}}",
+  "reservationOpenAt": "{{reservationOpenAt}}",
+  "reservationCloseAt": "{{reservationCloseAt}}",
   "capacity": 5,
-  "level": "BEGINNER"
+  "level": "INTERMEDIATE"
 }
 
 ### 잘못된 세션 생성
 POST {{baseUrl}}/api/sessions
+Authorization: Bearer {{adminAccessToken}}
 Content-Type: application/json
 
 {
@@ -30,5 +41,5 @@ Content-Type: application/json
 ### 세션 조회
 GET {{baseUrl}}/api/sessions/{{sessionId}}
 
-### 세선 목록 조회
+### 세션 목록 조회
 GET {{baseUrl}}/api/sessions?page=0&size=20
