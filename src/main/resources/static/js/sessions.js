@@ -21,6 +21,9 @@ const messageElement = document.querySelector("#page-message");
 const previousButton = document.querySelector("#previous-page");
 const nextButton = document.querySelector("#next-page");
 const pageInfo = document.querySelector("#page-info");
+const loadingState = document.querySelector("#loading-state");
+const errorActions = document.querySelector("#error-actions");
+const retryButton = document.querySelector("#retry-button");
 
 let currentPage = 0;
 let totalPages = 0;
@@ -32,10 +35,14 @@ if (requireAuthentication()) {
 
 previousButton.addEventListener("click", () => loadSessions(currentPage - 1));
 nextButton.addEventListener("click", () => loadSessions(currentPage + 1));
+retryButton.addEventListener("click", () => loadSessions(currentPage));
 
 async function loadSessions(page) {
     listElement.replaceChildren();
     emptyState.hidden = true;
+    errorActions.hidden = true;
+    loadingState.hidden = false;
+    listElement.setAttribute("aria-busy", "true");
     clearMessage(messageElement);
     setPaginationDisabled(true);
 
@@ -50,8 +57,12 @@ async function loadSessions(page) {
         emptyState.hidden = response.content.length !== 0;
         updatePagination();
     } catch (error) {
-        setMessage(messageElement, error.message, true);
+        setMessage(messageElement, error.message || "세션을 불러오지 못했습니다.", true);
+        errorActions.hidden = false;
         pageInfo.textContent = "-";
+    } finally {
+        loadingState.hidden = true;
+        listElement.setAttribute("aria-busy", "false");
     }
 }
 
@@ -79,7 +90,11 @@ function createSessionCard(session) {
     details.className = "details";
     details.append(
         detailLine("시작", formatDateTime(session.startAt)),
-        detailLine("종료", formatDateTime(session.endAt))
+        detailLine("종료", formatDateTime(session.endAt)),
+        detailLine(
+            "예약 기간",
+            `${formatDateTime(session.reservationOpenAt)} ~ ${formatDateTime(session.reservationCloseAt)}`
+        )
     );
 
     const capacity = document.createElement("div");
@@ -119,6 +134,9 @@ function createReservationForm(session) {
     const select = document.createElement("select");
     select.id = id;
     select.name = "participantCount";
+    select.addEventListener("change", () => {
+        delete form.dataset.idempotencyKey;
+    });
 
     for (let count = 1; count <= 4; count += 1) {
         const option = document.createElement("option");
@@ -128,11 +146,13 @@ function createReservationForm(session) {
         select.append(option);
     }
 
+    const availability = getReservationAvailability(session);
     const button = document.createElement("button");
     button.className = "button button-primary";
     button.type = "submit";
-    button.textContent = session.remainingCapacity > 0 ? "예약하기" : "마감";
-    button.disabled = session.remainingCapacity < 1 || session.status !== "SCHEDULED";
+    button.textContent = availability.label;
+    button.disabled = !availability.available;
+    select.disabled = !availability.available;
 
     field.append(label, select);
     form.append(field, button);
@@ -140,12 +160,33 @@ function createReservationForm(session) {
     return form;
 }
 
+function getReservationAvailability(session) {
+    if (session.remainingCapacity < 1) {
+        return {available: false, label: "마감"};
+    }
+    if (session.status !== "SCHEDULED") {
+        return {available: false, label: "예약 불가"};
+    }
+
+    const now = Date.now();
+    const openAt = new Date(session.reservationOpenAt).getTime();
+    const closeAt = new Date(session.reservationCloseAt).getTime();
+    if (!Number.isNaN(openAt) && now < openAt) {
+        return {available: false, label: "오픈 예정"};
+    }
+    if (!Number.isNaN(closeAt) && now >= closeAt) {
+        return {available: false, label: "예약 종료"};
+    }
+    return {available: true, label: "예약하기"};
+}
+
 async function reserveSession(event, session, select, button) {
     event.preventDefault();
     clearMessage(messageElement);
 
-    // 이 키는 아래의 단일 예약 시도가 끝날 때까지 재사용된다.
-    const idempotencyKey = crypto.randomUUID();
+    // 응답이 유실되어 같은 시도를 재요청하더라도 동일한 키를 사용한다.
+    const form = event.currentTarget;
+    const idempotencyKey = formIdempotencyKey(form);
     button.disabled = true;
     button.textContent = "예약 중...";
 
@@ -159,13 +200,21 @@ async function reserveSession(event, session, select, button) {
             })
         });
 
+        delete form.dataset.idempotencyKey;
         await loadSessions(currentPage);
         setMessage(messageElement, `예약이 완료되었습니다. 예약 번호: ${response.reservationId}`);
     } catch (error) {
-        setMessage(messageElement, error.message, true);
+        setMessage(messageElement, error.message || "예약을 처리하지 못했습니다.", true);
         button.disabled = false;
         button.textContent = "예약하기";
     }
+}
+
+function formIdempotencyKey(form) {
+    if (!form.dataset.idempotencyKey) {
+        form.dataset.idempotencyKey = crypto.randomUUID();
+    }
+    return form.dataset.idempotencyKey;
 }
 
 function updatePagination() {

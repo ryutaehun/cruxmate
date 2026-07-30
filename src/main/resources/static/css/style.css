@@ -163,10 +163,20 @@ a:focus-visible {
     color: var(--text);
 }
 
+.button-secondary:hover:not(:disabled) {
+    border-color: #aaa69c;
+    background: #f8f5ed;
+}
+
 .button-danger {
     border-color: #e9bdb7;
     background: var(--danger-soft);
     color: var(--danger);
+}
+
+.button-danger:hover:not(:disabled) {
+    border-color: #d9958d;
+    background: #f7dcd7;
 }
 
 .button-full {
@@ -360,6 +370,39 @@ a:focus-visible {
     text-align: center;
 }
 
+.loading-state {
+    display: flex;
+    min-height: 180px;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    color: var(--muted);
+}
+
+.loading-state[hidden] {
+    display: none;
+}
+
+.spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--line);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+.error-actions {
+    margin-top: -0.4rem;
+    text-align: center;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
 .pagination {
     display: flex;
     align-items: center;
@@ -381,7 +424,7 @@ a:focus-visible {
     }
 
     .site-header {
-        align-items: flex-start;
+        align-items: center;
         padding: 1rem;
     }
 
@@ -401,6 +444,16 @@ a:focus-visible {
 }
 
 @media (max-width: 480px) {
+    .site-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .site-nav {
+        width: 100%;
+        justify-content: space-between;
+    }
+
     .reservation-form {
         grid-template-columns: 1fr;
     }
@@ -409,5 +462,11 @@ a:focus-visible {
     .reservation-actions {
         align-items: flex-start;
         flex-direction: column;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .spinner {
+        animation: none;
     }
 }

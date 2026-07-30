@@ -33,7 +33,9 @@ form.addEventListener("submit", async (event) => {
         saveAccessToken(response.accessToken);
         window.location.replace("/sessions.html");
     } catch (error) {
-        setMessage(messageElement, error.message, true);
+        setMessage(messageElement, error.message || "로그인하지 못했습니다. 다시 시도해 주세요.", true);
+        passwordInput.focus();
+        passwordInput.select();
     } finally {
         submitButton.disabled = false;
         submitButton.textContent = "로그인";

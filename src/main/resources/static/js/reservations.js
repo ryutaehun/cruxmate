@@ -19,6 +19,9 @@ const messageElement = document.querySelector("#page-message");
 const previousButton = document.querySelector("#previous-page");
 const nextButton = document.querySelector("#next-page");
 const pageInfo = document.querySelector("#page-info");
+const loadingState = document.querySelector("#loading-state");
+const errorActions = document.querySelector("#error-actions");
+const retryButton = document.querySelector("#retry-button");
 
 let currentPage = 0;
 let totalPages = 0;
@@ -30,10 +33,14 @@ if (requireAuthentication()) {
 
 previousButton.addEventListener("click", () => loadReservations(currentPage - 1));
 nextButton.addEventListener("click", () => loadReservations(currentPage + 1));
+retryButton.addEventListener("click", () => loadReservations(currentPage));
 
 async function loadReservations(page) {
     listElement.replaceChildren();
     emptyState.hidden = true;
+    errorActions.hidden = true;
+    loadingState.hidden = false;
+    listElement.setAttribute("aria-busy", "true");
     clearMessage(messageElement);
     setPaginationDisabled(true);
 
@@ -47,8 +54,12 @@ async function loadReservations(page) {
         emptyState.hidden = response.content.length !== 0;
         updatePagination();
     } catch (error) {
-        setMessage(messageElement, error.message, true);
+        setMessage(messageElement, error.message || "예약 내역을 불러오지 못했습니다.", true);
+        errorActions.hidden = false;
         pageInfo.textContent = "-";
+    } finally {
+        loadingState.hidden = true;
+        listElement.setAttribute("aria-busy", "false");
     }
 }
 
@@ -109,6 +120,10 @@ function detailLine(label, value) {
 }
 
 async function cancelReservation(reservationId, button) {
+    if (!window.confirm(`예약 #${reservationId}을 취소하시겠습니까?`)) {
+        return;
+    }
+
     clearMessage(messageElement);
     button.disabled = true;
     button.textContent = "취소 중...";
@@ -120,7 +135,7 @@ async function cancelReservation(reservationId, button) {
         await loadReservations(currentPage);
         setMessage(messageElement, `예약 #${response.reservationId}이 취소되었습니다.`);
     } catch (error) {
-        setMessage(messageElement, error.message, true);
+        setMessage(messageElement, error.message || "예약을 취소하지 못했습니다.", true);
         button.disabled = false;
         button.textContent = "예약 취소";
     }
