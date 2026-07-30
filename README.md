@@ -405,51 +405,15 @@ JWT 비밀키는 워크플로 파일에 직접 작성하지 않고 GitHub Action
 
 ## 로컬 실행
 
-### 요구사항
-
-- Java 21
-- MySQL
-- 테스트 실행 시 Docker Desktop 또는 Docker 호환 런타임
-
-### 환경변수
-
-실제 비밀값은 저장소에 커밋하지 않습니다.
-
-```dotenv
-DB_USERNAME=<mysql-username>
-DB_PASSWORD=<mysql-password>
-JWT_SECRET=<base64-encoded-secret>
-```
-
-`JWT_SECRET`은 Base64로 디코딩했을 때 32바이트 이상이어야 합니다.
-
-### 데이터베이스
-
-기본 연결 대상:
-
-```text
-jdbc:mysql://localhost:3306/cruxmate
-```
-
-데이터베이스를 생성한 뒤 애플리케이션을 실행하면 Flyway가 테이블과 제약을 적용합니다.
-
-```sql
-CREATE DATABASE cruxmate;
-```
-
-### 애플리케이션 실행
-
 ```bash
+cp .env.example .env
+docker compose up -d
 ./mvnw spring-boot:run
 ```
 
-### 전체 테스트
+이미 `3306` 포트에서 MySQL을 사용 중이라면 `docker compose up -d`를 실행하지 않습니다.
 
-Docker가 실행 중인 상태에서 다음 명령을 실행합니다.
-
-```bash
-./mvnw clean test
-```
+환경변수, 기존 MySQL 사용, 관리자 계정과 시연 데이터 준비 방법은 [로컬 실행 가이드](docs/LOCAL_SETUP.md)를 참고하세요.
 
 ---
 
@@ -483,8 +447,6 @@ src/main/java/com/nhnacademy/cruxmate
 
 ## 향후 계획
 
-- Spring AI 기반 자연어 세션 탐색
-- 자연어 요청을 구조화된 예약 초안으로 변환
 - 사용자의 명시적 확인 후 기존 예약 API 호출
 - 멱등성 `PROCESSING` 타임아웃·복구 정책
 - 관리자 계정과 세션 상태 관리
