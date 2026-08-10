@@ -64,7 +64,8 @@ public class SecurityConfig {
                                 "/sessions.html",
                                 "/reservations.html",
                                 "/css/**",
-                                "/js/**"
+                                "/js/**",
+                                "/actuator/health"
                         ).permitAll()
 
                         .requestMatchers(

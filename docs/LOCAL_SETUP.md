@@ -16,26 +16,41 @@ cp .env.example .env
 DB_USERNAME=cruxmate
 DB_PASSWORD=<local-db-password>
 MYSQL_ROOT_PASSWORD=<local-root-password>
+COMPOSE_DB_USERNAME=cruxmate
+MYSQL_PORT=3307
 JWT_SECRET=<base64-encoded-secret>
 ```
 
 `.env`는 Git에서 제외됩니다. `JWT_SECRET`은 Base64 디코딩 후 32바이트 이상이어야 합니다.
+`COMPOSE_DB_USERNAME`은 MySQL 컨테이너가 생성할 일반 사용자이므로 `root`를 사용하면 안 됩니다.
+호스트의 기존 MySQL 접속에 `DB_USERNAME=root`를 사용하더라도 Compose 내부 계정은 별도로 유지됩니다.
 
 ## 2. MySQL 준비
 
-Docker Compose와 기존 MySQL 중 하나만 사용합니다. 3306 포트를 이미 사용 중이면 [기존 MySQL 사용](#기존-mysql-사용)으로 진행합니다.
+Docker Compose는 기존 MySQL과 충돌하지 않도록 기본적으로 호스트의 `3307` 포트를 사용합니다.
+다른 포트를 사용하려면 `.env`에 `MYSQL_PORT`를 지정합니다. 애플리케이션 컨테이너는 호스트 포트와 관계없이 내부의 `mysql:3306`으로 접속합니다.
 
-### Docker Compose MySQL 실행
+### Docker Compose 전체 실행
 
 ```bash
-docker compose up -d
+docker compose up -d --build
 ```
 
 ```bash
 docker compose ps
 ```
 
-`STATUS`가 `healthy`인지 확인합니다.
+`app`과 `mysql`의 `STATUS`가 모두 `healthy`인지 확인합니다.
+
+```bash
+curl http://localhost:8080/actuator/health
+```
+
+다음 응답이면 애플리케이션과 데이터베이스 연결이 준비된 상태입니다.
+
+```json
+{"groups":["liveness","readiness"],"status":"UP"}
+```
 
 ### 기존 MySQL 사용
 
@@ -56,7 +71,20 @@ GRANT ALL PRIVILEGES ON cruxmate.* TO 'cruxmate'@'localhost';
 
 Flyway는 이미 존재하는 데이터베이스 안에 테이블과 제약을 생성할 뿐 데이터베이스 자체를 생성하지 않습니다.
 
-## 3. 애플리케이션 실행
+## 3. 애플리케이션 실행 방식
+
+Docker Compose 전체 실행을 선택했다면 애플리케이션이 이미 실행 중이므로 이 단계를 생략합니다.
+애플리케이션만 IDE 또는 Maven으로 실행하려면 MySQL만 시작합니다.
+
+```bash
+docker compose up -d mysql
+```
+
+이때 호스트에서 실행하는 애플리케이션의 DB 주소를 Compose MySQL 포트에 맞춥니다.
+
+```dotenv
+DB_URL=jdbc:mysql://localhost:3307/cruxmate?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+```
 
 ```bash
 ./mvnw spring-boot:run
@@ -149,7 +177,7 @@ HTTP 요청은 `http/` 디렉터리에서 확인할 수 있습니다. 발급된 
 
 ## 8. Compose 종료 및 초기화
 
-기존 MySQL을 사용했다면 이 절차는 생략합니다. 다음 명령은 데이터 볼륨을 유지합니다.
+기존 MySQL을 사용했다면 이 절차는 생략합니다. 다음 명령은 컨테이너를 종료하지만 데이터 볼륨은 유지합니다.
 
 ```bash
 docker compose down

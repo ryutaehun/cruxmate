@@ -6,7 +6,7 @@ spring:
     name: cruxmate
 
   datasource:
-    url: jdbc:mysql://localhost:3306/cruxmate?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    url: ${DB_URL:jdbc:mysql://localhost:3306/cruxmate?serverTimezone=Asia/Seoul&characterEncoding=UTF-8}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
 
@@ -21,6 +21,15 @@ spring:
 
 
 jwt:
-  issuer: https://cruxmate.local
+  issuer: ${JWT_ISSUER:https://cruxmate.local}
   secret: ${JWT_SECRET}
   access-token-expiration: 1h
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
