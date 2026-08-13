@@ -436,10 +436,52 @@ a:focus-visible {
     text-align: center;
 }
 
+.admin-content {
+    max-width: 900px;
+}
+
+.admin-form-panel {
+    padding: clamp(1.25rem, 4vw, 2.25rem);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.form-grid-wide {
+    grid-column: 1 / -1;
+}
+
+.schedule-help {
+    margin: 0;
+    padding: 0.8rem 1rem;
+    border-radius: 10px;
+    background: #f2f3e8;
+    color: var(--muted);
+    font-size: 0.85rem;
+}
+
+.form-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
+}
+
 @media (max-width: 720px) {
     .auth-panel,
-    .card-grid {
+    .card-grid,
+    .form-grid {
         grid-template-columns: 1fr;
+    }
+
+    .form-grid-wide {
+        grid-column: auto;
     }
 
     .site-header {
@@ -480,6 +522,11 @@ a:focus-visible {
     .reservation-head,
     .reservation-actions {
         align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .form-actions {
+        align-items: stretch;
         flex-direction: column;
     }
 }

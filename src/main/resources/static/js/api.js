@@ -30,6 +30,45 @@ export function requireAuthentication() {
     return true;
 }
 
+export function getCurrentUser() {
+    const accessToken = getAccessToken();
+    if (!accessToken) {
+        return null;
+    }
+
+    try {
+        const payload = accessToken.split(".")[1];
+        const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
+        const normalized = base64.padEnd(Math.ceil(base64.length / 4) * 4, "=");
+        const decoded = decodeURIComponent(atob(normalized).split("").map((character) =>
+            `%${character.charCodeAt(0).toString(16).padStart(2, "0")}`
+        ).join(""));
+        return JSON.parse(decoded);
+    } catch {
+        return null;
+    }
+}
+
+export function requireAdmin() {
+    if (!requireAuthentication()) {
+        return false;
+    }
+
+    if (getCurrentUser()?.role !== "ADMIN") {
+        window.location.replace("/sessions.html");
+        return false;
+    }
+    return true;
+}
+
+export function showAdminLinks() {
+    if (getCurrentUser()?.role === "ADMIN") {
+        document.querySelectorAll("[data-admin-only]").forEach((element) => {
+            element.hidden = false;
+        });
+    }
+}
+
 export function logout() {
     clearAccessToken();
     window.location.replace("/login.html");
