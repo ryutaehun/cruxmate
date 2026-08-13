@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>회원가입 | CruxMate</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<main class="centered-page">
+    <section class="panel auth-panel">
+        <div>
+            <p class="eyebrow">JOIN CRUXMATE</p>
+            <h1>새로운 크럭스를<br>함께 넘어봐요.</h1>
+            <p class="muted">계정을 만들고 원하는 클라이밍 세션을 간편하게 예약해 보세요.</p>
+        </div>
+
+        <form id="signup-form" class="form-stack" novalidate>
+            <div class="field">
+                <label for="email">이메일</label>
+                <input id="email" name="email" type="email" autocomplete="email"
+                       placeholder="climber@example.com" required aria-describedby="email-help">
+                <small id="email-help" class="field-help">로그인할 때 사용할 이메일을 입력해 주세요.</small>
+            </div>
+            <div class="field">
+                <label for="password">비밀번호</label>
+                <input id="password" name="password" type="password" autocomplete="new-password"
+                       placeholder="8자 이상 입력" minlength="8" maxlength="50" required
+                       aria-describedby="password-help">
+                <small id="password-help" class="field-help">8자 이상 50자 이하로 입력해 주세요.</small>
+            </div>
+            <div class="field">
+                <label for="password-confirm">비밀번호 확인</label>
+                <input id="password-confirm" name="passwordConfirm" type="password" autocomplete="new-password"
+                       placeholder="비밀번호 다시 입력" minlength="8" maxlength="50" required>
+            </div>
+            <p id="signup-message" class="message" role="alert" aria-live="polite" hidden></p>
+            <button id="signup-button" class="button button-primary button-full" type="submit">계정 만들기</button>
+            <p class="auth-switch">이미 계정이 있나요? <a href="/login.html">로그인</a></p>
+        </form>
+    </section>
+</main>
+<script type="module" src="/js/signup.js"></script>
+</body>
+</html>
