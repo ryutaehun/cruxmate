@@ -4,7 +4,8 @@ import {
     clearMessage,
     formatDateTime,
     requireAuthentication,
-    setMessage
+    setMessage,
+    showAdminLinks
 } from "./api.js";
 
 const PAGE_SIZE = 20;
@@ -30,6 +31,7 @@ let totalPages = 0;
 
 if (requireAuthentication()) {
     bindLogoutButtons();
+    showAdminLinks();
     loadSessions(0);
 }
 

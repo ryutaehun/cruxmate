@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>세션 관리 | CruxMate</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<header class="site-header">
+    <a class="brand" href="/sessions.html">CRUXMATE</a>
+    <nav class="site-nav" aria-label="주요 메뉴">
+        <a href="/sessions.html">세션</a>
+        <a href="/reservations.html">내 예약</a>
+        <a class="active" href="/admin-sessions.html" aria-current="page">세션 관리</a>
+        <button class="link-button" data-logout type="button">로그아웃</button>
+    </nav>
+</header>
+
+<main class="content admin-content">
+    <section class="page-heading">
+        <div>
+            <p class="eyebrow">SESSION ADMIN</p>
+            <h1>새 세션 만들기</h1>
+            <p class="muted">세션과 예약 일정을 입력하면 바로 예약 목록에 공개됩니다.</p>
+        </div>
+        <a class="button button-secondary" href="/sessions.html">세션 목록 보기</a>
+    </section>
+
+    <section class="admin-form-panel">
+        <form id="session-create-form" class="form-stack">
+            <div class="form-grid">
+                <div class="field form-grid-wide">
+                    <label for="title">세션 제목</label>
+                    <input id="title" name="title" type="text" maxlength="100"
+                           placeholder="예: 평일 저녁 중급 세션" required autofocus>
+                </div>
+                <div class="field">
+                    <label for="location">장소</label>
+                    <input id="location" name="location" type="text" maxlength="100"
+                           placeholder="예: 광주 그랩잇" required>
+                </div>
+                <div class="field">
+                    <label for="level">난이도</label>
+                    <select id="level" name="level" required>
+                        <option value="ALL_LEVELS">모든 난이도</option>
+                        <option value="BEGINNER">초급</option>
+                        <option value="INTERMEDIATE">중급</option>
+                        <option value="ADVANCED">고급</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="start-at">세션 시작</label>
+                    <input id="start-at" name="startAt" type="datetime-local" required>
+                </div>
+                <div class="field">
+                    <label for="end-at">세션 종료</label>
+                    <input id="end-at" name="endAt" type="datetime-local" required>
+                </div>
+                <div class="field">
+                    <label for="reservation-open-at">예약 시작</label>
+                    <input id="reservation-open-at" name="reservationOpenAt" type="datetime-local" required>
+                </div>
+                <div class="field">
+                    <label for="reservation-close-at">예약 마감</label>
+                    <input id="reservation-close-at" name="reservationCloseAt" type="datetime-local" required>
+                </div>
+                <div class="field">
+                    <label for="capacity">정원</label>
+                    <input id="capacity" name="capacity" type="number" min="1" step="1" value="8" required>
+                    <span class="field-help">1명 이상 입력하세요.</span>
+                </div>
+            </div>
+
+            <p class="schedule-help">예약 시작 &lt; 예약 마감 ≤ 세션 시작 &lt; 세션 종료 순서여야 합니다.</p>
+            <p id="create-message" class="message" role="status" hidden></p>
+            <div class="form-actions">
+                <button id="create-button" class="button button-primary" type="submit">세션 만들기</button>
+                <button id="reset-button" class="button button-secondary" type="reset">입력 초기화</button>
+            </div>
+        </form>
+    </section>
+</main>
+<script type="module" src="/js/admin-sessions.js"></script>
+</body>
+</html>

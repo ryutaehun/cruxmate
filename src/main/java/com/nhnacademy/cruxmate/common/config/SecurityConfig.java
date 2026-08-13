@@ -64,6 +64,7 @@ public class SecurityConfig {
                                 "/signup.html",
                                 "/sessions.html",
                                 "/reservations.html",
+                                "/admin-sessions.html",
                                 "/css/**",
                                 "/js/**",
                                 "/actuator/health"
