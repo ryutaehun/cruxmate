@@ -59,9 +59,8 @@ jobs:
             --instance-ids "i-0ed18aaa9c0339992" \
             --document-name "AWS-RunShellScript" \
             --parameters 'commands=[
-              "cd /home/ubuntu/cruxmate",
-              "git pull origin main",
-              "docker compose up -d --build"
+              "set -e",
+              "sudo -u ubuntu bash -lc '\''cd /home/ubuntu/cruxmate && git pull origin main && docker compose up -d --build'\''"
             ]' \
             --query "Command.CommandId" \
             --output text)
