@@ -186,13 +186,13 @@ async function reserveSession(event, session, select, button) {
     event.preventDefault();
     clearMessage(messageElement);
 
-    // 응답이 유실되어 같은 시도를 재요청하더라도 동일한 키를 사용한다.
     const form = event.currentTarget;
-    const idempotencyKey = formIdempotencyKey(form);
     button.disabled = true;
     button.textContent = "예약 중...";
 
     try {
+        // 응답이 유실되어 같은 시도를 재요청하더라도 동일한 키를 사용한다.
+        const idempotencyKey = formIdempotencyKey(form);
         const response = await apiFetch("/api/reservations", {
             method: "POST",
             headers: {"Idempotency-Key": idempotencyKey},
@@ -214,9 +214,29 @@ async function reserveSession(event, session, select, button) {
 
 function formIdempotencyKey(form) {
     if (!form.dataset.idempotencyKey) {
-        form.dataset.idempotencyKey = crypto.randomUUID();
+        form.dataset.idempotencyKey = createUuid();
     }
     return form.dataset.idempotencyKey;
+}
+
+function createUuid() {
+    if (typeof globalThis.crypto?.randomUUID === "function") {
+        return globalThis.crypto.randomUUID();
+    }
+
+    const bytes = new Uint8Array(16);
+    if (typeof globalThis.crypto?.getRandomValues === "function") {
+        globalThis.crypto.getRandomValues(bytes);
+    } else {
+        for (let index = 0; index < bytes.length; index += 1) {
+            bytes[index] = Math.floor(Math.random() * 256);
+        }
+    }
+
+    bytes[6] = (bytes[6] & 0x0f) | 0x40;
+    bytes[8] = (bytes[8] & 0x3f) | 0x80;
+    const hex = Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0"));
+    return `${hex.slice(0, 4).join("")}-${hex.slice(4, 6).join("")}-${hex.slice(6, 8).join("")}-${hex.slice(8, 10).join("")}-${hex.slice(10).join("")}`;
 }
 
 function updatePagination() {
